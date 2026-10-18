@@ -4,5 +4,8 @@
   "locale.label": "Sprache",
   "locale.en": "Englisch",
   "locale.de": "Deutsch",
-  "setup.check": "Setup funktioniert, Betragsformat: {amount}"
+  "setup.check": "Setup funktioniert, Betragsformat: {amount}",
+  "setup.api.loading": "Zahlung wird über die API geladen …",
+  "setup.api.success": "API funktioniert, Zahlung von {sender}: {amount}",
+  "setup.api.error": "API-Anfrage fehlgeschlagen ({code})."
 }

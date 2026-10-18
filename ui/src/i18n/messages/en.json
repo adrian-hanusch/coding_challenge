@@ -4,5 +4,8 @@
   "locale.label": "Language",
   "locale.en": "English",
   "locale.de": "German",
-  "setup.check": "Setup works, amount formatting: {amount}"
+  "setup.check": "Setup works, amount formatting: {amount}",
+  "setup.api.loading": "Loading payment from the API …",
+  "setup.api.success": "API works, payment from {sender}: {amount}",
+  "setup.api.error": "API request failed ({code})."
 }
