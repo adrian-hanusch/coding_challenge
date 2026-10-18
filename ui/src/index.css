@@ -1,0 +1,3 @@
+/* Tailwind v4 is configured in CSS, there is no tailwind.config.js. HeroUI must come after Tailwind. */
+@import 'tailwindcss';
+@import '@heroui/styles';

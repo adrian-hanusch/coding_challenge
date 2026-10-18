@@ -1,0 +1,8 @@
+{
+  "app.title": "Payment Management",
+  "app.subtitle": "Assign unmatched payments to invoices.",
+  "locale.label": "Language",
+  "locale.en": "English",
+  "locale.de": "German",
+  "setup.check": "Setup works, amount formatting: {amount}"
+}
