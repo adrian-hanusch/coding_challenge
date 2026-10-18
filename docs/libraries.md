@@ -20,7 +20,7 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 | Validierung | zod | Wahl |
 | Client-State | Zustand | Vorgabe, **vorerst nicht eingesetzt** |
 | i18n | react-intl (FormatJS) | vorläufig (F25) |
-| API-Mocking | MSW v2 | vorläufig (F23) |
+| API-Mocking | MSW v3 | vorläufig (F23) |
 | Tests | Vitest + React Testing Library + user-event | Wahl |
 | Codequalität | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query) + Prettier | Wahl |
 
@@ -108,10 +108,13 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 - Die Message-IDs sind typisiert: Über die globalen FormatJS-Typen (`FormatjsIntl.Message`) gelten die Schlüssel aus `en.json` als einzige erlaubten IDs. Eine unbekannte ID an `<FormattedMessage>` oder `formatMessage` schlägt schon im Typecheck fehl.
 - Fehlt in `de.json` ein Schlüssel, meldet das der Typecheck (`satisfies`). Ein Test prüft zusätzlich, dass `de.json` keine überzähligen Schlüssel enthält.
 
-### MSW v2 *(vorläufig)*
+### MSW v3 *(vorläufig)*
 - Fängt `fetch` auf Netzwerkebene ab. Die App-Logik bleibt dadurch unverändert, wenn später eine echte API angebunden wird.
 - Dieselben Handler laufen im Browser (Service Worker) und in Vitest (`setupServer`).
 - Verzögerung und Fehlerfälle lassen sich steuern (A18).
+- Das Vite-Plugin `msw/vite` liefert den Service Worker im Dev-Server aus. Es läuft im Modus `worker-only`, damit die
+  stabile `setupWorker`-API genutzt wird und nicht das experimentelle `virtual:msw`. Eine generierte
+  `public/mockServiceWorker.js` gibt es deshalb nicht, und der Produktions-Build enthält weder Worker noch Handler.
 
 ### Vitest + React Testing Library + user-event
 - Vitest nutzt die Vite-Konfiguration, ein eigenes Build-Setup ist nicht nötig. Die API ist mit Jest kompatibel.

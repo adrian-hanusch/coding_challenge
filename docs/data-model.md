@@ -189,6 +189,44 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 | Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |
 | Payment is still `UNMATCHED` on the server | blocking | A10 | This payment has already been assigned. Reload the page. |
 
+## API
+
+Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during development. All paths are relative to `/api`.
+
+| Endpoint | Response | Purpose |
+|---|---|---|
+| `GET /payments/{paymentId}` | `Payment` | Load the payment, also when it is already `ASSIGNED` |
+| `GET /invoices?q=&customerId=&offset=0&limit=10` | `Page<Invoice>` | Autocomplete and lookup of a typed invoice number |
+| `POST /payments/{paymentId}/assignment` | `201 PaymentAssignment` | Confirm the assignment with all four splits |
+
+### Invoice search
+
+- `q` matches the invoice number and merchant name, case-insensitive. Max. 100 characters.
+- `customerId` ranks that customer's invoices first and does **not** filter (A5).
+- All statuses are returned, so the UI can tell "not found" from "already paid". Only `OPEN` is selectable (A3).
+- The order is total, so pages never overlap: exact number match, the customer's invoices, `OPEN` first, `dueDate`, `invoiceNumber`.
+- Offset pagination: `offset` ≥ 0, `limit` 1–50 (default 10). The response is `{ items, total, offset, limit }`.
+- There is no `sort` parameter. The autocomplete only needs relevance order.
+
+### Assignment
+
+The request is `{ invoiceId, splits }` with all four splits, including `MERCHANT_PAYOUT`, so the server checks exactly the values shown in the confirmation modal. A difference between payment and invoice amount is not rejected (A4). On success the payment becomes `ASSIGNED` and the invoice `PAID`.
+
+### Errors
+
+RFC 9457 problem details (`application/problem+json`): `{ status, code, title, errors?: [{ field, code }] }`. The UI maps `code` to a message id and never shows `title` (D1).
+
+| Status | `code` | Cause |
+|---|---|---|
+| 400 | `INVALID_QUERY` | Invalid search parameters |
+| 404 | `PAYMENT_NOT_FOUND` | Unknown payment id |
+| 409 | `PAYMENT_ALREADY_ASSIGNED` | Payment is no longer `UNMATCHED` |
+| 409 | `INVOICE_NOT_OPEN` | Invoice is not `OPEN` or already assigned (A3) |
+| 422 | `INVOICE_NOT_FOUND` | Unknown `invoiceId` in the request body |
+| 422 | `VALIDATION_FAILED` | Not exactly one split per type, or an amount that is not an integer ≥ 0 in EUR |
+| 422 | `SPLIT_SUM_MISMATCH` | The splits do not add up to the payment amount |
+| 500 | `INTERNAL_ERROR` | Server error |
+
 ## Design rationale
 
 ### Why splits belong to the assignment, not the invoice
