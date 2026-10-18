@@ -1,0 +1,8 @@
+{
+  "app.title": "Zahlungsverwaltung",
+  "app.subtitle": "Nicht zugeordnete Zahlungen Rechnungen zuweisen.",
+  "locale.label": "Sprache",
+  "locale.en": "Englisch",
+  "locale.de": "Deutsch",
+  "setup.check": "Setup funktioniert, Betragsformat: {amount}"
+}
