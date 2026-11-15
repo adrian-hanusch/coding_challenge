@@ -23,7 +23,8 @@ function parseInteger(value: string | null, fallback: number, min: number, max: 
 }
 
 function parseSearch(searchParams: URLSearchParams): { search: ParsedSearch } | { errors: FieldError[] } {
-  const q = searchParams.get('q') ?? ''
+  // Trimmed here, so the length check and the search see the same value.
+  const q = (searchParams.get('q') ?? '').trim()
   const offset = parseInteger(searchParams.get('offset'), 0, 0, Number.MAX_SAFE_INTEGER)
   const limit = parseInteger(searchParams.get('limit'), DEFAULT_INVOICE_LIMIT, 1, MAX_LIMIT)
 
@@ -44,7 +45,7 @@ function parseSearch(searchParams: URLSearchParams): { search: ParsedSearch } | 
  * exact number match, the customer's invoices, OPEN first, due date, invoice number.
  */
 function searchInvoices(invoices: readonly Invoice[], { q, customerId, offset, limit }: ParsedSearch): Page<Invoice> {
-  const needle = q.trim().toLowerCase()
+  const needle = q.toLowerCase()
   // The three ranking flags as one number, most significant first.
   const rank = (invoice: Invoice) =>
     (invoice.invoiceNumber.toLowerCase() === needle ? 0 : 4) +

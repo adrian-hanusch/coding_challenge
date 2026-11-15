@@ -7,21 +7,23 @@ import { readJson } from './storage.ts'
  *
  *   ?mock-delay=2000                       fixed latency in ms (default: realistic 100–400 ms)
  *   ?mock-fail=assignment:409,search:500   failing endpoints; `?mock-fail=` clears them
+ *                                          (`assignment:409-invoice` simulates INVOICE_NOT_OPEN)
  *   ?mock-reset                            restores fixtures and clears all switches
  */
 
+// The HTTP status, with a suffix where one status has several causes.
 const FAILURES = {
-  payment: [500],
-  search: [500],
-  assignment: [409, 500],
+  payment: ['500'],
+  search: ['500'],
+  assignment: ['409', '409-invoice', '500'],
 } as const
 
 type Endpoint = keyof typeof FAILURES
-type FailureStatus = (typeof FAILURES)[Endpoint][number]
+type Failure = (typeof FAILURES)[Endpoint][number]
 
 export interface Scenario {
   delayMs: number | null
-  failures: Partial<Record<Endpoint, FailureStatus>>
+  failures: Partial<Record<Endpoint, Failure>>
 }
 
 const STORAGE_KEY = 'mock:scenario'
@@ -41,10 +43,9 @@ function parseDelay(value: string): number | null {
 function parseFailures(value: string): Scenario['failures'] {
   const failures: Scenario['failures'] = {}
   for (const entry of value.split(',').filter(Boolean)) {
-    const [endpoint = '', status] = entry.split(':')
-    const code = Number(status)
-    if (Object.hasOwn(FAILURES, endpoint) && (FAILURES[endpoint as Endpoint] as readonly number[]).includes(code)) {
-      failures[endpoint as Endpoint] = code as FailureStatus
+    const [endpoint = '', failure = ''] = entry.split(':')
+    if (Object.hasOwn(FAILURES, endpoint) && (FAILURES[endpoint as Endpoint] as readonly string[]).includes(failure)) {
+      failures[endpoint as Endpoint] = failure as Failure
     } else {
       console.warn(`[mock] Ignoring mock-fail=${entry}, allowed: ${JSON.stringify(FAILURES)}`)
     }
@@ -72,9 +73,10 @@ export function loadScenario(url: URL, storage: Storage): { scenario: Scenario; 
   return { scenario: active, reset: false }
 }
 
-const FAILURE_RESPONSES: Record<FailureStatus, Parameters<typeof problem>> = {
-  409: [409, 'PAYMENT_ALREADY_ASSIGNED', 'Simulated: payment was assigned concurrently'],
-  500: [500, 'INTERNAL_ERROR', 'Simulated server error'],
+const FAILURE_RESPONSES: Record<Failure, Parameters<typeof problem>> = {
+  '409': [409, 'PAYMENT_ALREADY_ASSIGNED', 'Simulated: payment was assigned concurrently'],
+  '409-invoice': [409, 'INVOICE_NOT_OPEN', 'Simulated: invoice was assigned concurrently'],
+  '500': [500, 'INTERNAL_ERROR', 'Simulated server error'],
 }
 
 /** Wraps a domain resolver with the active latency and, if configured, a simulated failure for its endpoint. */
@@ -84,7 +86,7 @@ export function withScenario<Params extends PathParams<keyof Params> = PathParam
 ): HttpResponseResolver<Params> {
   return async (info) => {
     await delay(active.delayMs ?? 'real')
-    const status = active.failures[endpoint]
-    return status === undefined ? resolver(info) : problem(...FAILURE_RESPONSES[status])
+    const failure = active.failures[endpoint]
+    return failure === undefined ? resolver(info) : problem(...FAILURE_RESPONSES[failure])
   }
 }
