@@ -45,21 +45,30 @@ nötig. Vertrag und Fehlercodes: [docs/data-model.md](../docs/data-model.md#api)
 | `pay-exact`          | Rechnung `RE-2026-0418` passt genau (1.249,00 €)          |
 | `pay-mismatch`       | Passende Rechnung `RE-2026-0502` liegt 50,00 € höher (A4) |
 | `pay-assigned`       | Bereits zugeordnet                                        |
-| `pay-unknown-sender` | Absender ohne Kunde (`customerId: null`)                  |
+| `pay-unknown-sender` | Absender ohne Kunde (`customerId: null`), Randfall        |
 | `pay-many-invoices`  | Absender mit 28 Rechnungen, für die Paginierung           |
 
 `RE-2026-0420` ist bezahlt, `RE-2026-0377` storniert, `RE-2026-9999` existiert nicht.
+
+`pay-unknown-sender` liegt außerhalb des Szenarios der Aufgabe (dort ist der Absender bekannt) und prüft, dass die
+Seite auch ohne Kunden funktioniert.
 
 ### Szenarien
 
 Als URL-Parameter, sie gelten bis zum Schließen des Tabs:
 
-| Parameter                              | Wirkung                                                                                  |
-| -------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `?mock-delay=2000`                     | Feste Antwortzeit in ms (sonst zufällig 100–400 ms)                                      |
-| `?mock-fail=assignment:409,search:500` | Endpunkte schlagen fehl: `payment:500`, `search:500`, `assignment:409`, `assignment:500` |
-| `?mock-fail=` / `?mock-delay=`         | Setzt den jeweiligen Schalter zurück                                                     |
-| `?mock-reset`                          | Stellt die Testdaten wieder her und löscht alle Schalter                                 |
+| Parameter                              | Wirkung                                                  |
+| -------------------------------------- | -------------------------------------------------------- |
+| `?mock-delay=2000`                     | Feste Antwortzeit in ms (sonst zufällig 100–400 ms)      |
+| `?mock-fail=assignment:409,search:500` | Endpunkte schlagen fehl, Werte siehe unten               |
+| `?mock-fail=` / `?mock-delay=`         | Setzt den jeweiligen Schalter zurück                     |
+| `?mock-reset`                          | Stellt die Testdaten wieder her und löscht alle Schalter |
+
+Werte für `mock-fail`:
+
+- `payment:500`, `search:500`, `assignment:500`: Serverfehler (`INTERNAL_ERROR`)
+- `assignment:409`: Zahlung wurde inzwischen zugeordnet (`PAYMENT_ALREADY_ASSIGNED`)
+- `assignment:409-invoice`: Rechnung ist nicht mehr offen (`INVOICE_NOT_OPEN`)
 
 In der Browser-Konsole setzt `__mockDb.reset()` nur die Daten zurück.
 

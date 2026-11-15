@@ -2,13 +2,13 @@
 
 Geplanter Technologie-Stack mit Begründung. **Vorgegeben** sind HeroUI v3, TanStack Query, react-router und Zustand
 (nur bei Bedarf). Alles Übrige ist eine eigene Wahl.
-Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.md](Annahmen.md).
+Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md](assumptions.md).
 
 ## Übersicht
 
 | Bereich | Library | Vorgabe / Wahl |
 |---|---|---|
-| Sprache | TypeScript (strict) | Vorgabe (F24) |
+| Sprache | TypeScript (strict) | Vorgabe |
 | Framework | React 19 | Voraussetzung für HeroUI v3 |
 | Build | Vite | Wahl |
 | Paketmanager | pnpm | Wahl |
@@ -19,8 +19,8 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 | Formulare | TanStack Form v1 | Wahl |
 | Validierung | zod | Wahl |
 | Client-State | Zustand | Vorgabe, **vorerst nicht eingesetzt** |
-| i18n | react-intl (FormatJS) | vorläufig (F25) |
-| API-Mocking | MSW v3 | vorläufig (F23) |
+| i18n | react-intl (FormatJS) | vorläufig (D1) |
+| API-Mocking | MSW v3 | vorläufig (A10) |
 | Tests | Vitest + React Testing Library + user-event | Wahl |
 | Codequalität | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query) + Prettier | Wahl |
 
@@ -67,7 +67,7 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 - Die Query Devtools sind nur in der Entwicklung aktiv.
 
 ### react-router v7, Data Mode *(Vorgabe)*
-- Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktioniert **`useBlocker`** für die Warnung bei ungespeicherten Änderungen (A15).
+- Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktioniert **`useBlocker`** für die Warnung bei ungespeicherten Änderungen.
 - Daten werden **nicht** über `loader` geladen, sondern nur über TanStack Query. So gibt es einen einzigen Cache und keine doppelte Datenhaltung.
 - Routen: `/payments` (optionale Übersicht) und `/payments/:paymentId/assign`. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
 
@@ -89,7 +89,8 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 - **Umsetzung:**
   - Über `createFormHook` werden die HeroUI-Felder einmal angebunden. Das hält den Code für die einzelnen Felder kurz.
   - Das zod-Schema ist die **einzige** Validierungsquelle. Es liefert Message-IDs statt Texten (siehe react-intl).
-  - Der Merchant-Betrag wird über `useStore(form.store, selector)` abgeleitet und ist **kein** Formularfeld (A1).
+  - Der vorgeschlagene Merchant-Betrag wird über `useStore(form.store, selector)` abgeleitet. Als Formularfeld
+    gespeichert wird nur eine Überschreibung durch den Nutzer (`merchantOverride`, A1).
   - Fehlermeldungen erscheinen beim Verlassen eines Feldes oder beim Absenden, nicht bei jedem Tastendruck.
   - Schema-Fehler kommen als Objekte, nicht als Strings. Die Anzeige liest deshalb `.message` aus.
 
@@ -104,14 +105,14 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 ### react-intl (FormatJS) *(vorläufig)*
 - Texte liegen in `de.json` und `en.json`. Die Schlüssel sind flach und durch Punkte gegliedert. Platzhalter folgen der ICU-Syntax (`{amount}`).
 - Beträge werden mit `intl.formatNumber(cents / 100, { style: 'currency', currency })` angezeigt. Das sind dieselben Optionen wie in den `formatOptions` des `NumberField`, damit Eingabe und Zusammenfassung gleich aussehen.
-- **Eine Sprachquelle** für `IntlProvider` (react-intl) und `I18nProvider` (React Aria) (A19).
+- **Eine Sprachquelle** für `IntlProvider` (react-intl) und `I18nProvider` (React Aria) (D1).
 - Die Message-IDs sind typisiert: Über die globalen FormatJS-Typen (`FormatjsIntl.Message`) gelten die Schlüssel aus `en.json` als einzige erlaubten IDs. Eine unbekannte ID an `<FormattedMessage>` oder `formatMessage` schlägt schon im Typecheck fehl.
 - Fehlt in `de.json` ein Schlüssel, meldet das der Typecheck (`satisfies`). Ein Test prüft zusätzlich, dass `de.json` keine überzähligen Schlüssel enthält.
 
 ### MSW v3 *(vorläufig)*
 - Fängt `fetch` auf Netzwerkebene ab. Die App-Logik bleibt dadurch unverändert, wenn später eine echte API angebunden wird.
 - Dieselben Handler laufen im Browser (Service Worker) und in Vitest (`setupServer`).
-- Verzögerung und Fehlerfälle lassen sich steuern (A18).
+- Verzögerung und Fehlerfälle lassen sich über URL-Parameter steuern (siehe `ui/README.md`, „Szenarien“).
 - Das Vite-Plugin `msw/vite` liefert den Service Worker im Dev-Server aus. Es läuft im Modus `worker-only`, damit die
   stabile `setupWorker`-API genutzt wird und nicht das experimentelle `virtual:msw`. Eine generierte
   `public/mockServiceWorker.js` gibt es deshalb nicht, und der Produktions-Build enthält weder Worker noch Handler.
@@ -137,7 +138,7 @@ Zugehörige Fragen und Annahmen stehen in [Fragen.md](Fragen.md) und [Annahmen.m
 |---|---|
 | Redux / RTK | Unnötig: Server-State liegt in Query, Formular-State in TanStack Form |
 | Formik | Wird kaum noch weiterentwickelt, schwache Typisierung |
-| dinero.js / big.js | Es gibt nur Addition und Subtraktion ganzer Cent-Beträge (A6). Ein kleines eigenes Modul reicht. Bei Prozent-Gebühren oder mehreren Währungen neu bewerten. |
+| dinero.js / big.js | Es gibt nur Addition und Subtraktion ganzer Cent-Beträge (A8). Ein kleines eigenes Modul reicht. Bei Prozent-Gebühren oder mehreren Währungen neu bewerten. |
 | axios | `fetch` reicht, und MSW fängt es direkt ab |
 | date-fns / dayjs | Datumsanzeige über `Intl` bzw. react-intl (`formatDate`) |
 | Lodash (z. B. `debounce`) | Ein kleiner `useDebouncedValue`-Hook genügt |
