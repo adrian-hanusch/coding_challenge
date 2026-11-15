@@ -1,7 +1,34 @@
 import { Card, ToggleButton, ToggleButtonGroup } from '@heroui/react'
+import { useQuery } from '@tanstack/react-query'
 import { FormattedMessage, useIntl } from 'react-intl'
+import { ApiError } from '../api/client.ts'
+import { paymentQueryOptions } from '../api/payments.ts'
 import { useAppLocale } from '../i18n/LocaleContext.ts'
 import { isSupportedLocale, SUPPORTED_LOCALES } from '../i18n/locales.ts'
+
+// Proves that the (mock) API, TanStack Query and amount formatting work together.
+function ApiCheck() {
+  const intl = useIntl()
+  const { data: payment, error } = useQuery(paymentQueryOptions('pay-exact'))
+
+  if (error) {
+    const code = error instanceof ApiError ? error.code : error.name
+    return <FormattedMessage id="setup.api.error" values={{ code }} />
+  }
+  if (!payment) return <FormattedMessage id="setup.api.loading" />
+  return (
+    <FormattedMessage
+      id="setup.api.success"
+      values={{
+        sender: payment.senderName,
+        amount: intl.formatNumber(payment.amount.amountMinor / 100, {
+          style: 'currency',
+          currency: payment.amount.currency,
+        }),
+      }}
+    />
+  )
+}
 
 // Placeholder page that proves HeroUI, Tailwind and react-intl are wired up. Replaced by the router later.
 export function App() {
@@ -45,6 +72,12 @@ export function App() {
             id="setup.check"
             values={{ amount: intl.formatNumber(1234.56, { style: 'currency', currency: 'EUR' }) }}
           />
+        </Card.Content>
+      </Card>
+
+      <Card>
+        <Card.Content data-testid="setup-api-check-text">
+          <ApiCheck />
         </Card.Content>
       </Card>
     </main>

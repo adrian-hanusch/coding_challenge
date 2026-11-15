@@ -43,7 +43,7 @@ These follow necessarily from the spec and are not assumptions.
 | A7 | The assignment stores who confirmed it and when (`confirmedBy`, `confirmedAt`). Without a backend, `confirmedBy` is a fixed mock user. | The spec has a double-check step but does not specify an audit trail. |
 | A8 | Only EUR is supported. Amounts are stored as integer cents. | The spec names no currency. Integer cents avoid floating-point errors (see the data model). |
 | A9 | Invoice numbers use the format `RE-YYYY-NNNN`. | The spec names no format. Drop the format check if this is wrong. |
-| A10 | No backend is specified. The following endpoints are proposals, implemented as a mock API: `GET /payments/{id}`, `GET /invoices?q=`, `POST /payments/{id}/assignment`. | The deliverable is frontend code only. |
+| A10 | No backend is specified. The following endpoints are proposals, implemented as a mock API: `GET /payments/{id}`, `GET /invoices?q=&customerId=&offset=&limit=`, `POST /payments/{id}/assignment`. Details in [data-model.md](./data-model.md#api). | The deliverable is frontend code only. |
 | A11 | Payment amount, sender name and reference number are read-only. | Feature 1 is titled "Payment Details **Input**", but its items only say "display". |
 | A12 | The page handles one payment, loaded by ID (e.g. from the URL). There is no list of unmatched payments. After confirmation, the page shows a success state. | The scenario describes a single payment and does not say how it is selected or what happens next. |
 | A13 | The fee types are fixed to the three listed, plus the merchant payout. | The overview mentions "various fees" but lists only three. |
