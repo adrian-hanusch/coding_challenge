@@ -1,0 +1,2 @@
+# Line endings are LF everywhere, matching Prettier. Overrides a global core.autocrlf=true on Windows.
+* text=auto eol=lf

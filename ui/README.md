@@ -79,8 +79,16 @@ src/
   main.tsx              Einstiegspunkt
   index.css             Tailwind v4 + HeroUI-Styles (keine tailwind.config.js)
   app/AppProviders.tsx  QueryClient, Sprache, Toasts, Query-Devtools (nur Dev)
-  app/App.tsx           Platzhalterseite
+  app/router.tsx        Routen (react-router, Data Mode), Pfade in app/paths.ts
+  app/RouteError.tsx    Fehlerseite der Routen
+  app/shell/            App Shell, eine Komponente pro Aufgabe
+    AppShell.tsx        Layout: Sidebar, Kopfzeile, Seite
+    AppHeader.tsx       Kopfzeile mit Sprachwahl (mobil zusätzlich Menü-Button und Logo)
+    navigation/         Sidebar (Desktop), Drawer (Mobil), NavList/NavItem, navItems.ts
+      navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
+  pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
   i18n/                 react-intl + React Aria mit einer gemeinsamen Sprachquelle
+    localeStore.ts      Zustand: gewählte Sprache (gespeichert)
     messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
   lib/queryClient.ts    Standardoptionen für TanStack Query
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen

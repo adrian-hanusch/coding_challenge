@@ -18,9 +18,13 @@
     "@heroui/styles": "^3.2.6",
     "@tanstack/react-query": "^5.104.3",
     "@tanstack/react-query-devtools": "^5.104.3",
+    "lucide-react": "^1.73.0",
     "react": "^19.3.1",
+    "react-aria-components": "^1.22.1",
     "react-dom": "^19.3.1",
-    "react-intl": "^12.1.4"
+    "react-intl": "^12.1.4",
+    "react-router": "^8.5.1",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

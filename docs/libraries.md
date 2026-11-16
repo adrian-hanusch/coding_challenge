@@ -14,11 +14,12 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 | Paketmanager | pnpm | Wahl |
 | UI-Komponenten | HeroUI v3 | Vorgabe |
 | Styling | Tailwind CSS v4 | Voraussetzung für HeroUI v3 |
+| Icons | lucide-react | Wahl |
 | Server-State | TanStack Query v5 | Vorgabe |
-| Routing | react-router v7 (Data Mode) | Vorgabe |
+| Routing | react-router v8 (Data Mode) | Vorgabe |
 | Formulare | TanStack Form v1 | Wahl |
 | Validierung | zod | Wahl |
-| Client-State | Zustand | Vorgabe, **vorerst nicht eingesetzt** |
+| Client-State | Zustand (mit `persist`) | Vorgabe |
 | i18n | react-intl (FormatJS) | vorläufig (D1) |
 | API-Mocking | MSW v3 | vorläufig (A10) |
 | Tests | Vitest + React Testing Library + user-event | Wahl |
@@ -66,9 +67,13 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
   - Nach Erfolg werden die Abfragen für Zahlung und Rechnungen neu geladen.
 - Die Query Devtools sind nur in der Entwicklung aktiv.
 
-### react-router v7, Data Mode *(Vorgabe)*
+### react-router v8, Data Mode *(Vorgabe)*
 - Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktioniert **`useBlocker`** für die Warnung bei ungespeicherten Änderungen.
 - Daten werden **nicht** über `loader` geladen, sondern nur über TanStack Query. So gibt es einen einzigen Cache und keine doppelte Datenhaltung.
+- Die HeroUI-Komponenten (React Aria) navigieren über `RouterProvider` aus `@heroui/react` in der Wurzelroute
+  (`RouterLinkProvider`), angebunden an `useNavigate` und
+  `useHref`. Links mit `href` laden die Seite dadurch nicht neu. `routerOptions` ist über eine Typ-Erweiterung von
+  `react-aria-components` typisiert (`routerConfig.d.ts`), deshalb ist das Paket eine direkte Abhängigkeit.
 - Routen: `/payments` (optionale Übersicht) und `/payments/:paymentId/assign`. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
 
 ### TanStack Form v1 + zod *(Wahl)*
@@ -94,13 +99,20 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
   - Fehlermeldungen erscheinen beim Verlassen eines Feldes oder beim Absenden, nicht bei jedem Tastendruck.
   - Schema-Fehler kommen als Objekte, nicht als Strings. Die Anzeige liest deshalb `.message` aus.
 
-### Zustand *(Vorgabe „wenn nötig“, vorerst nicht eingesetzt)*
-- Jede Art von State hat bereits einen Platz:
+### Zustand + `persist` *(Vorgabe)*
+- Jede Art von State hat genau einen Platz:
   - Server-Daten → TanStack Query
   - Formularwerte → TanStack Form
-  - Modal offen/zu, Sprachwahl → lokaler State bzw. React Context
-- Zustand würde dieselben Daten ein zweites Mal halten und damit Synchronisationsfehler riskieren.
-- **Wird eingesetzt, wenn** State über mehrere Routen geteilt werden muss und nicht vom Server kommt, z. B. ein mehrstufiger Ablauf über eigene Routen.
+  - App-weiter Client-State (Sprachwahl, Sidebar eingeklappt) → Zustand
+  - State, den nur eine Komponente braucht (mobiles Menü offen, Modal offen) → `useState`
+- Ein Store pro Thema, neben dem Code, der ihn nutzt:
+  - `i18n/localeStore.ts`: Sprache. Startwert aus der Browsersprache, die Wahl des Nutzers wird gespeichert.
+  - `app/shell/navigation/navigationStore.ts`: Sidebar eingeklappt.
+- `persist` schreibt in `localStorage`. `partialize` legt fest, was gespeichert wird. `merge` übernimmt nur gültige
+  Werte, damit ein veralteter oder von Hand geänderter Eintrag die App nicht in einen ungültigen Zustand bringt.
+  Ist `localStorage` gesperrt (privater Modus), läuft die App ohne Speichern weiter.
+- Komponenten lesen mit Selektoren (`useLocaleStore((s) => s.locale)`), damit sie nur bei Änderung dieses Werts neu rendern.
+- Server-Daten kommen **nicht** in Zustand, sonst gäbe es sie doppelt neben dem Query-Cache.
 
 ### react-intl (FormatJS) *(vorläufig)*
 - Texte liegen in `de.json` und `en.json`. Die Schlüssel sind flach und durch Punkte gegliedert. Platzhalter folgen der ICU-Syntax (`{amount}`).
