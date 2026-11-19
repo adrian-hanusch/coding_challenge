@@ -1,3 +1,6 @@
 # pnpm content-addressable store (created on the mount root)
 .pnpm-store/
 node_modules/
+
+# Local Claude Code
+.claude/
