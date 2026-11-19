@@ -17,10 +17,6 @@
   "locale.label": "Sprache",
   "locale.en": "Englisch",
   "locale.de": "Deutsch",
-  "setup.check": "Setup funktioniert, Betragsformat: {amount}",
-  "setup.api.loading": "Zahlung wird über die API geladen …",
-  "setup.api.success": "API funktioniert, Zahlung von {sender}: {amount}",
-  "setup.api.error": "API-Anfrage fehlgeschlagen ({code}).",
   "assign.title": "Zahlung zuordnen",
   "assign.subtitle": "Prüfen Sie die Zahlung und wählen Sie die passende Rechnung.",
   "assign.loadError.title": "Zahlung konnte nicht geladen werden",
@@ -52,5 +48,12 @@
   "invoiceSearch.error.missing": "Geben Sie eine Rechnungsnummer ein oder wählen Sie eine Rechnung aus der Liste.",
   "invoiceSearch.error.notFound": "Keine Rechnung zu „{query}“ gefunden. Prüfen Sie die Nummer oder suchen Sie nach dem Händler.",
   "invoiceSearch.error.notOpen": "Rechnung {number} ist bereits bezahlt. Wählen Sie eine andere Rechnung.",
-  "invoiceSearch.error.searchFailed": "Rechnungen konnten nicht geladen werden. Bitte versuchen Sie es erneut."
+  "invoiceSearch.error.searchFailed": "Rechnungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+  "payments.open.title": "Zahlung öffnen",
+  "payments.open.label": "Zahlungs-ID",
+  "payments.open.description": "Geben Sie die ID der Zahlung ein, die Sie zuordnen möchten.",
+  "payments.open.missing": "Geben Sie eine Zahlungs-ID ein.",
+  "payments.open.submit": "Öffnen",
+  "payments.demo.title": "Testzahlungen",
+  "payments.demo.description": "Vorbereitete Fälle der Mock-API."
 }
