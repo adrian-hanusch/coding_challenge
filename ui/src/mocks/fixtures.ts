@@ -39,35 +39,27 @@ const manyInvoices: Invoice[] = Array.from({ length: 28 }, (_, index) => {
   const merchant = MERCHANT_CYCLE[index % MERCHANT_CYCLE.length] ?? MERCHANTS.nordwind
   const day = String(1 + Math.floor(index / 3) * 3).padStart(2, '0')
   const status: InvoiceStatus = index % 7 === 6 ? 'PAID' : 'OPEN'
-  return invoice(
-    `RE-2026-${String(1001 + index)}`,
-    merchant,
-    CUSTOMERS.jonas,
-    2990 + index * 1250,
-    `2026-11-${day}`,
-    status,
-  )
+  return invoice(String(1001 + index), merchant, CUSTOMERS.jonas, 2990 + index * 1250, `2026-11-${day}`, status)
 })
 
 export const INVOICES: readonly Invoice[] = [
-  // pay-exact: RE-2026-0418 matches the payment amount. Same due date as 0419 to exercise the tie-breaker.
-  invoice('RE-2026-0418', MERCHANTS.nordwind, CUSTOMERS.max, 124900, '2026-10-31'),
-  invoice('RE-2026-0419', MERCHANTS.nordlicht, CUSTOMERS.max, 59900, '2026-10-31'),
-  invoice('RE-2026-0420', MERCHANTS.bergblick, CUSTOMERS.max, 18950, '2026-09-30', 'PAID'),
-  invoice('RE-2026-0377', MERCHANTS.nordwind, CUSTOMERS.max, 7990, '2026-08-15', 'CANCELLED'),
+  // pay-exact: 418 matches the payment amount. Same due date as 419 to exercise the tie-breaker.
+  invoice('418', MERCHANTS.nordwind, CUSTOMERS.max, 124900, '2026-10-31'),
+  invoice('419', MERCHANTS.nordlicht, CUSTOMERS.max, 59900, '2026-10-31'),
+  invoice('420', MERCHANTS.bergblick, CUSTOMERS.max, 18950, '2026-09-30', 'PAID'),
 
-  // pay-mismatch: RE-2026-0502 is €50.00 above the payment (A4).
-  invoice('RE-2026-0502', MERCHANTS.stadtgarten, CUSTOMERS.erika, 39950, '2026-11-05'),
-  invoice('RE-2026-0503', MERCHANTS.kuestenrad, CUSTOMERS.erika, 89000, '2026-11-20'),
+  // pay-mismatch: 502 is €50.00 above the payment.
+  invoice('502', MERCHANTS.stadtgarten, CUSTOMERS.erika, 39950, '2026-11-05'),
+  invoice('503', MERCHANTS.kuestenrad, CUSTOMERS.erika, 89000, '2026-11-20'),
 
   // pay-assigned: already paid by that payment.
-  invoice('RE-2026-0311', MERCHANTS.bergblick, CUSTOMERS.anna, 8990, '2026-10-01', 'PAID'),
-  invoice('RE-2026-0312', MERCHANTS.nordlicht, CUSTOMERS.anna, 24900, '2026-11-15'),
+  invoice('311', MERCHANTS.bergblick, CUSTOMERS.anna, 8990, '2026-10-01', 'PAID'),
+  invoice('312', MERCHANTS.nordlicht, CUSTOMERS.anna, 24900, '2026-11-15'),
 
   // Other customers with similar merchant names, so the customer ranking is visible when searching "nord".
-  invoice('RE-2026-0601', MERCHANTS.nordwind, CUSTOMERS.lena, 124900, '2026-10-20'),
-  invoice('RE-2026-0602', MERCHANTS.nordlicht, CUSTOMERS.lena, 15000, '2026-10-25'),
-  invoice('RE-2026-0603', MERCHANTS.stadtgarten, CUSTOMERS.lena, 15000, '2026-12-01', 'CANCELLED'),
+  invoice('601', MERCHANTS.nordwind, CUSTOMERS.lena, 124900, '2026-10-20'),
+  invoice('602', MERCHANTS.nordlicht, CUSTOMERS.lena, 15000, '2026-10-25'),
+  invoice('603', MERCHANTS.stadtgarten, CUSTOMERS.lena, 15000, '2026-12-01', 'PAID'),
 
   ...manyInvoices,
 ]
@@ -122,16 +114,13 @@ export const PAYMENTS: readonly Payment[] = [
 
 export const ASSIGNMENTS: readonly PaymentAssignment[] = [
   {
-    id: 'asg-0001',
     paymentId: 'pay-assigned',
-    invoiceId: 'inv-RE-2026-0311',
+    invoiceId: 'inv-311',
     splits: [
       { type: 'PLATFORM_FEE', amount: eur(450) },
       { type: 'PROVIDER_FEE', amount: eur(135) },
       { type: 'LOGISTICS_FEE', amount: eur(490) },
       { type: 'MERCHANT_PAYOUT', amount: eur(7915) },
     ],
-    confirmedBy: 'Mock User',
-    confirmedAt: '2026-09-29T10:15:00Z',
   },
 ]

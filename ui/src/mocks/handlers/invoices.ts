@@ -40,7 +40,7 @@ function parseSearch(searchParams: URLSearchParams): { search: ParsedSearch } | 
 }
 
 /**
- * Matches invoice number and merchant name (A5). Returns all statuses, so the UI can tell
+ * Matches invoice number and merchant name. Returns all statuses, so the UI can tell
  * "not found" from "already paid". The order is total, so pages never overlap:
  * exact number match, the customer's invoices, OPEN first, due date, invoice number.
  */

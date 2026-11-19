@@ -1,13 +1,13 @@
-// API contract shared by the client and the mock handlers. Mirrors docs/data-model.md.
+// API contract shared by the client and the mock handlers.
 
-/** Integer cents, e.g. `124900` = €1,249.00 (A8). */
+/** Integer cents, e.g. `124900` = €1,249.00. */
 export interface Money {
   amountMinor: number
   currency: 'EUR'
 }
 
 export type PaymentStatus = 'UNMATCHED' | 'ASSIGNED'
-export type InvoiceStatus = 'OPEN' | 'PAID' | 'CANCELLED'
+export type InvoiceStatus = 'OPEN' | 'PAID'
 
 export const SPLIT_TYPES = ['PLATFORM_FEE', 'PROVIDER_FEE', 'LOGISTICS_FEE', 'MERCHANT_PAYOUT'] as const
 export type SplitType = (typeof SPLIT_TYPES)[number]
@@ -26,7 +26,7 @@ export interface Payment {
 /** `merchantId` is resolved to `{ id, name }` so search results can show the merchant without a second request. */
 export interface Invoice {
   id: string
-  /** e.g. "RE-2026-0418" (A9) */
+  /** e.g. "418" */
   invoiceNumber: string
   merchant: { id: string; name: string }
   customerId: string
@@ -42,13 +42,10 @@ export interface PaymentSplit {
 }
 
 export interface PaymentAssignment {
-  id: string
   paymentId: string
   invoiceId: string
   /** Exactly 4, one per SplitType, summing up to the payment amount. */
   splits: PaymentSplit[]
-  confirmedBy: string
-  confirmedAt: string
 }
 
 export interface CreateAssignmentRequest {
@@ -61,7 +58,7 @@ export const DEFAULT_INVOICE_LIMIT = 10
 
 export interface InvoiceSearchParams {
   q?: string
-  /** Ranks this customer's invoices first (A5). Does not filter. */
+  /** Ranks this customer's invoices first. Does not filter. */
   customerId?: string | null
   offset?: number
   limit?: number

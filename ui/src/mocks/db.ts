@@ -9,7 +9,7 @@ interface MockState {
 }
 
 // Bump when the fixtures change, so a stale state in sessionStorage is discarded.
-const STATE_VERSION = 1
+const STATE_VERSION = 2
 const STORAGE_KEY = 'mock:db'
 
 function seed(): MockState {
@@ -54,18 +54,11 @@ export const db = {
   },
 
   /**
-   * Stores the assignment, marks the payment as assigned and the invoice as paid (A4: the backend decides).
-   * A paid invoice is no longer OPEN, which keeps it from being assigned twice (A3).
+   * Stores the assignment, marks the payment as assigned and the invoice as paid (the backend decides).
+   * A paid invoice is no longer OPEN, which keeps it from being assigned twice.
    */
   assign(paymentId: string, invoiceId: string, splits: PaymentSplit[]): PaymentAssignment {
-    const assignment: PaymentAssignment = {
-      id: `asg-${String(state.assignments.length + 1).padStart(4, '0')}`,
-      paymentId,
-      invoiceId,
-      splits,
-      confirmedBy: 'Mock User',
-      confirmedAt: new Date().toISOString(),
-    }
+    const assignment: PaymentAssignment = { paymentId, invoiceId, splits }
     state.assignments.push(assignment)
     state.payments = state.payments.map((payment) =>
       payment.id === paymentId ? { ...payment, status: 'ASSIGNED' } : payment,

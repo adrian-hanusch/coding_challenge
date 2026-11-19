@@ -4,7 +4,7 @@ import { IntlProvider } from 'react-intl'
 import { useLocaleStore } from './localeStore.ts'
 import { DEFAULT_LOCALE, MESSAGES } from './locales.ts'
 
-// react-intl and React Aria must always use the same locale, see A19.
+// react-intl and React Aria must always use the same locale.
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const locale = useLocaleStore((state) => state.locale)
 
