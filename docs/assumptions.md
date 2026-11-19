@@ -40,9 +40,9 @@ These follow necessarily from the spec and are not assumptions.
 | A4 | If the payment amount differs from the invoice amount, a non-blocking warning appears. The user must acknowledge it in the modal. The backend decides whether the invoice status changes. | This follows from A3 without silently marking an underpaid invoice as paid. |
 | A5 | The sender is modeled as a `Customer` with their own invoices. Invoice search matches the invoice number and merchant name, and lists the customer's invoices first. | The spec only says the sender's *name* was found in the database. |
 | A6 | Fees are entered as absolute EUR amounts, not percentages. | The spec says "input fields" without specifying a unit. |
-| A7 | The assignment stores who confirmed it and when (`confirmedBy`, `confirmedAt`). Without a backend, `confirmedBy` is a fixed mock user. | The spec has a double-check step but does not specify an audit trail. |
+| A7 | The assignment stores no audit data (who confirmed it and when). | The spec asks for a double-check step, not an audit trail. |
 | A8 | Only EUR is supported. Amounts are stored as integer cents. | The spec names no currency. Integer cents avoid floating-point errors (see the data model). |
-| A9 | Invoice numbers use the format `RE-YYYY-NNNN`. | The spec names no format. Drop the format check if this is wrong. |
+| A9 | An invoice number is a plain number, kept as a string. There is no format check: a number is invalid if no invoice has it. | The spec names no format, only "invalid invoice numbers". |
 | A10 | No backend is specified. The following endpoints are proposals, implemented as a mock API: `GET /payments/{id}`, `GET /invoices?q=&customerId=&offset=&limit=`, `POST /payments/{id}/assignment`. Details in [data-model.md](./data-model.md#api). | The deliverable is frontend code only. |
 | A11 | Payment amount, sender name and reference number are read-only. | Feature 1 is titled "Payment Details **Input**", but its items only say "display". |
 | A12 | The page handles one payment, loaded by ID (e.g. from the URL). There is no list of unmatched payments. After confirmation, the page shows a success state. | The scenario describes a single payment and does not say how it is selected or what happens next. |
@@ -51,10 +51,9 @@ These follow necessarily from the spec and are not assumptions.
 ## Open questions
 
 1. **Merchant payout: input or calculated?** The spec allows both readings (A1).
-2. **Invoice number format?** It is not specified (A9).
-3. **Fees: absolute or percentage?** If they are percentages, a rounding rule is needed, and the merchant should take the remainder. Prefilling the fees from the merchant contract would also be possible.
-4. **Partial or overpayments?** Can an invoice be paid in installments, or can one payment cover several invoices (A3)?
-5. **Invoice search scope?** Only the sender's invoices, or all open invoices with the sender's ranked first (A5)?
-6. **Who confirms?** Is self-confirmation in the modal enough, or is a four-eyes check intended?
-7. **Currencies?** Only EUR is assumed (A8). `Money.currency` allows extension, but currencies without 2 decimals (JPY, BHD) would also need a minor-unit exponent.
-8. **Reversal?** Can a confirmed assignment be undone, and what status would result?
+2. **Fees: absolute or percentage?** If they are percentages, a rounding rule is needed, and the merchant should take the remainder. Prefilling the fees from the merchant contract would also be possible.
+3. **Partial or overpayments?** Can an invoice be paid in installments, or can one payment cover several invoices (A3)?
+4. **Invoice search scope?** Only the sender's invoices, or all open invoices with the sender's ranked first (A5)?
+5. **Who confirms?** Is self-confirmation in the modal enough, or is a four-eyes check intended?
+6. **Currencies?** Only EUR is assumed (A8). `Money.currency` allows extension, but currencies without 2 decimals (JPY, BHD) would also need a minor-unit exponent.
+7. **Reversal?** Can a confirmed assignment be undone, and what status would result?

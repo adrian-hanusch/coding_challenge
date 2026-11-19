@@ -16,7 +16,7 @@ export function fetchInvoices({ q, customerId, offset, limit }: Required<Invoice
   return apiFetch<Page<Invoice>>(`/invoices?${params.toString()}`, { signal })
 }
 
-/** Paged search for the autocomplete. The next offset comes from the last page, see docs/data-model.md#api. */
+/** Paged search for the autocomplete. The next offset comes from the last page. */
 export function invoiceSearchOptions({ q = '', customerId = null, limit = DEFAULT_INVOICE_LIMIT }: InvoiceSearch) {
   return infiniteQueryOptions({
     queryKey: invoiceKeys.search({ q, customerId, limit }),

@@ -44,8 +44,6 @@ erDiagram
         uuid id PK
         uuid paymentId FK, UK
         uuid invoiceId FK, UK "unique per A3"
-        string confirmedBy "A7"
-        datetime confirmedAt "A7"
     }
     PAYMENT_SPLIT {
         uuid id PK
@@ -72,7 +70,7 @@ erDiagram
 |---|---|---|
 | `Money` | `{ amountMinor, currency }` | Integer cents, e.g. `124900` = €1,249.00 (A8) |
 | `PaymentStatus` | `UNMATCHED`, `ASSIGNED` | The page edits only `UNMATCHED` payments |
-| `InvoiceStatus` | `OPEN`, `PAID`, `CANCELLED` | Only `OPEN` is selectable (A3). The backend decides any status change after assignment (A4). |
+| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` is selectable (A3). The backend decides any status change after assignment (A4). |
 | `SplitType` | `PLATFORM_FEE`, `PROVIDER_FEE`, `LOGISTICS_FEE`, `MERCHANT_PAYOUT` | Each type exactly once per assignment |
 
 ## TypeScript types
@@ -81,7 +79,7 @@ erDiagram
 type Money = { amountMinor: number; currency: 'EUR' };
 
 type PaymentStatus = 'UNMATCHED' | 'ASSIGNED';
-type InvoiceStatus = 'OPEN' | 'PAID' | 'CANCELLED';
+type InvoiceStatus = 'OPEN' | 'PAID';
 type SplitType = 'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE' | 'MERCHANT_PAYOUT';
 
 interface Payment {
@@ -98,7 +96,7 @@ interface Payment {
 // the summary can show the merchant name without a second request.
 interface Invoice {
   id: string;
-  invoiceNumber: string;            // e.g. "RE-2026-0418" (A9)
+  invoiceNumber: string;            // plain number, e.g. "418" (A9)
   merchant: { id: string; name: string };
   customerId: string;
   amount: Money;
@@ -112,12 +110,9 @@ interface PaymentSplit {
 }
 
 interface PaymentAssignment {
-  id: string;
   paymentId: string;
   invoiceId: string;
   splits: PaymentSplit[];           // exactly 4, sum = payment.amount
-  confirmedBy: string;
-  confirmedAt: string;
 }
 ```
 
@@ -178,13 +173,12 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 | Rule | Severity | Basis | Example message |
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
-| Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for RE-2026-9999. Check the number or search by merchant. |
-| Invoice number matches the expected format | blocking | A9 | Invoice numbers use the format RE-2026-0418. |
+| Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for 9999. Check the number or search by merchant. |
 | Each amount is a valid number in the active locale and ≥ 0 (all four fields) | blocking | Spec: "correct data types and values", D1 | Enter an amount of €0.00 or more. |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
 | Σ of all four positions = payment amount | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
-| Invoice is `OPEN` | blocking | A3 | Invoice RE-2026-0418 is already paid. Select a different invoice. |
+| Invoice is `OPEN` | blocking | A3 | Invoice 418 is already paid. Select a different invoice. |
 | Payment amount = invoice amount | warning | A4 | The payment differs from the invoice amount by €50.00. You will confirm this in the next step. |
 | Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |
 | Payment is still `UNMATCHED` on the server | blocking | A10 | This payment has already been assigned. Reload the page. |
@@ -232,7 +226,7 @@ RFC 9457 problem details (`application/problem+json`): `{ status, code, title, e
 ### Why splits belong to the assignment, not the invoice
 
 - An invoice is what is owed. Splits distribute money that was actually received.
-- Splits are part of the confirmed decision and are created or reversed with it (A7).
+- Splits are part of the confirmed decision and are created or reversed with it.
 - Adding partial payments later (A3) only drops `unique` on `invoiceId`.
 
 ### Why integer cents

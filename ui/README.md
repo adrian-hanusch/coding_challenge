@@ -40,15 +40,18 @@ nötig. Vertrag und Fehlercodes: [docs/data-model.md](../docs/data-model.md#api)
 
 ### Testfälle
 
-| Zahlung              | Fall                                                      |
-| -------------------- | --------------------------------------------------------- |
-| `pay-exact`          | Rechnung `RE-2026-0418` passt genau (1.249,00 €)          |
-| `pay-mismatch`       | Passende Rechnung `RE-2026-0502` liegt 50,00 € höher (A4) |
-| `pay-assigned`       | Bereits zugeordnet                                        |
-| `pay-unknown-sender` | Absender ohne Kunde (`customerId: null`), Randfall        |
-| `pay-many-invoices`  | Absender mit 28 Rechnungen, für die Paginierung           |
+Die Seite `/payments` listet alle Testzahlungen als Links. Direkt aufrufen lässt sich eine Zahlung über
+`/payments/<id>/assign`, z. B. `/payments/pay-exact/assign`.
 
-`RE-2026-0420` ist bezahlt, `RE-2026-0377` storniert, `RE-2026-9999` existiert nicht.
+| Zahlung              | Fall                                               |
+| -------------------- | -------------------------------------------------- |
+| `pay-exact`          | Rechnung `418` passt genau (1.249,00 €)            |
+| `pay-mismatch`       | Passende Rechnung `502` liegt 50,00 € höher (A4)   |
+| `pay-assigned`       | Bereits zugeordnet                                 |
+| `pay-unknown-sender` | Absender ohne Kunde (`customerId: null`), Randfall |
+| `pay-many-invoices`  | Absender mit 28 Rechnungen, für die Paginierung    |
+
+`420` ist bezahlt, `9999` existiert nicht.
 
 `pay-unknown-sender` liegt außerhalb des Szenarios der Aufgabe (dort ist der Absender bekannt) und prüft, dass die
 Seite auch ohne Kunden funktioniert.
@@ -87,10 +90,22 @@ src/
     navigation/         Sidebar (Desktop), Drawer (Mobil), NavList/NavItem, navItems.ts
       navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
   pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
+    PaymentsPage        /payments, Zahlung per ID öffnen, mit Mock-API zusätzlich die Testzahlungen
+    AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung und hält die Auswahl
+  features/payments/    Einstieg: OpenPaymentForm, DemoPaymentList (nur Dev, Fixtures nicht im Build)
+  features/payment-assignment/  Bausteine der Zuordnung
+    PaymentDetailsForm  Zahlungsdaten (nur Anzeige, A11) und Rechnungsauswahl
+    InvoiceSearchField  Rechnungsauswahl (ComboBox), Zustand des Eingabefelds
+    useInvoiceSearch    Serverseitige Suche mit Debounce und Paginierung, gruppiert nach Absender
+    useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
+    invoiceInput.ts     Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
+  domain/invoice.ts     Fachregel: nur offene Rechnungen wählbar (A3)
   i18n/                 react-intl + React Aria mit einer gemeinsamen Sprachquelle
     localeStore.ts      Zustand: gewählte Sprache (gespeichert)
     messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
-  lib/queryClient.ts    Standardoptionen für TanStack Query
+  app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
+  components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
+  components/           Seitenübergreifend: Page, PageCard, SectionHeader, PaymentStatusChip
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
   mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
     browser.ts          Start im Browser (nur Dev)
