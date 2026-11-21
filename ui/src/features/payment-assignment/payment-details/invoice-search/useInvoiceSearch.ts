@@ -1,9 +1,9 @@
 import { type InfiniteData, keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { invoiceSearchOptions } from '../../api/invoices.ts'
-import type { Invoice, Page } from '../../api/types.ts'
-import { isSelectable } from '../../domain/invoice.ts'
-import { useDebouncedValue } from '../../lib/useDebouncedValue.ts'
+import { invoiceSearchOptions } from '../../../../api/invoices.ts'
+import type { Invoice, Page } from '../../../../api/types.ts'
+import { isSelectable } from '../../../../domain/invoice.ts'
+import { useDebouncedValue } from '../../../../lib/useDebouncedValue.ts'
 
 const SEARCH_DEBOUNCE_MS = 250
 

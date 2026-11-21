@@ -1,5 +1,5 @@
-import type { Invoice } from '../../api/types.ts'
-import { isSelectable } from '../../domain/invoice.ts'
+import type { Invoice } from '../../../../api/types.ts'
+import { isSelectable } from '../../../../domain/invoice.ts'
 
 export type InvoiceInputError =
   | { code: 'missing' }

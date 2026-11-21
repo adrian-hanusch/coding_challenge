@@ -1,10 +1,10 @@
 import { Alert } from '@heroui/react'
-import { Typography } from '../../components/Typography.tsx'
+import { Typography } from '../../../components/Typography.tsx'
 import { CircleCheck } from 'lucide-react'
 import { FormattedMessage } from 'react-intl'
-import type { Invoice, Money } from '../../api/types.ts'
-import { useFormatCents, useFormatMoney } from '../../lib/useFormatMoney.ts'
-import { InvoiceDueDate } from './InvoiceDueDate.tsx'
+import type { Invoice, Money } from '../../../api/types.ts'
+import { useFormatCents, useFormatMoney } from '../../../lib/useFormatMoney.ts'
+import { InvoiceDueDate } from './invoice-search/InvoiceDueDate.tsx'
 
 /** Chosen invoice and its difference to the payment. */
 export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; paymentAmount: Money }) {

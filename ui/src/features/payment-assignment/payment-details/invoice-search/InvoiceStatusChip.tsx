@@ -1,6 +1,6 @@
 import { Chip } from '@heroui/react'
 import { FormattedMessage } from 'react-intl'
-import type { InvoiceStatus } from '../../api/types.ts'
+import type { InvoiceStatus } from '../../../../api/types.ts'
 
 const COLOR = { OPEN: 'accent', PAID: 'success' } as const
 
