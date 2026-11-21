@@ -10,3 +10,9 @@ export function useFormatMoney() {
     [intl],
   )
 }
+
+/** Like `useFormatMoney`, for cents that are not a `Money` value yet, e.g. differences and sums. */
+export function useFormatCents(currency: Money['currency']) {
+  const formatMoney = useFormatMoney()
+  return useCallback((amountMinor: number) => formatMoney({ amountMinor, currency }), [formatMoney, currency])
+}
