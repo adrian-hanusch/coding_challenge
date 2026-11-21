@@ -4,7 +4,7 @@ import { useQueries, useQuery } from '@tanstack/react-query'
 import { paymentQueryOptions } from '../../api/payments.ts'
 import type { Payment } from '../../api/types.ts'
 import { assignPaymentPath } from '../../app/paths.ts'
-import { useFormatMoney } from '../../lib/money.ts'
+import { useFormatMoney } from '../../lib/useFormatMoney.ts'
 import { PaymentStatusChip } from '../../components/PaymentStatusChip.tsx'
 
 // The ternary on the compile-time constant keeps the fixtures out of production builds.

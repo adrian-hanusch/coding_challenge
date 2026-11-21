@@ -120,30 +120,30 @@ interface PaymentAssignment {
 
 Store only what the user enters. Derive everything else on each render so the values cannot drift apart.
 
+React Aria's `NumberField` parses the input with the active locale's separators (D1) and blocks negative values, so
+the draft holds cents, not raw strings (`ui/src/domain/split.ts`, `ui/src/lib/money.ts`):
+
 ```ts
-interface AssignmentDraft {
-  invoiceInput: string;             // typed number or search text
-  invoice: Invoice | null;          // resolved invoice
-  fees: {                           // raw input in the active locale, e.g. "62,45" (de), "62.45" (en)
-    platform: string;
-    provider: string;
-    logistics: string;
-  };
-  merchantOverride: string | null;  // null = use the calculated payout (A1)
-  mismatchAcknowledged: boolean;    // modal checkbox (A4)
-  isConfirmOpen: boolean;
+// cents; null = empty field; { tooPrecise } = more than two decimals, kept as typed euros instead of rounded
+type AmountInput = number | null | { tooPrecise: number };
+
+interface SplitDraft {
+  fees: Record<'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE', AmountInput>;
+  merchantOverride: AmountInput; // null = use the calculated payout (A1)
 }
 
-// derived, not stored; parsing uses the locale's separators (D1)
-const feesMinor       = parseFees(draft.fees, intl.locale);
-const suggestedPayout = payment.amount.amountMinor - sum(feesMinor);
-const merchantPayout  = draft.merchantOverride === null
-  ? suggestedPayout
-  : parseMoney(draft.merchantOverride, intl.locale);
-const difference      = payment.amount.amountMinor - sum(feesMinor) - merchantPayout;
-const errors          = validate(draft, payment, merchantPayout, difference);
-const canConfirm      = errors.length === 0;
+// AssignmentForm state: the invoice, plus useSplitDraft(payment.amount) for the split
+invoice: Invoice | null;
+draft: SplitDraft;
+touchedFees: Set<FeeType>; // fees whose "missing" error is shown; a submit can mark all of them
+
+// derived on each render inside useSplitDraft, never stored
+const evaluation = evaluateSplit(payment.amount.amountMinor, draft);
+// → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error }
 ```
+
+An override equal to the calculated payout is stored as `null` (`withMerchantPayout`), so it does not stay as a stale
+manual value.
 
 Server data (the payment and invoice search results) is server state, for example via TanStack Query. The draft is local form state.
 
@@ -174,10 +174,11 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
 | Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for 9999. Check the number or search by merchant. |
-| Each amount is a valid number in the active locale and ≥ 0 (all four fields) | blocking | Spec: "correct data types and values", D1 | Enter an amount of €0.00 or more. |
+| Each fee is entered (shown after leaving the field or on submit) | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
+| Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values", D1 | – (the field rejects other characters and negative input, and clamps larger values) |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
-| Σ of all four positions = payment amount | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
+| Σ of all four positions = payment amount, checked once all fields are valid | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
 | Invoice is `OPEN` | blocking | A3 | Invoice 418 is already paid. Select a different invoice. |
 | Payment amount = invoice amount | warning | A4 | The payment differs from the invoice amount by €50.00. You will confirm this in the next step. |
 | Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |

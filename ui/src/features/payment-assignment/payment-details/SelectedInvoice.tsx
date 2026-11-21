@@ -1,14 +1,15 @@
 import { Alert } from '@heroui/react'
-import { Typography } from '../../components/Typography.tsx'
+import { Typography } from '../../../components/Typography.tsx'
 import { CircleCheck } from 'lucide-react'
 import { FormattedMessage } from 'react-intl'
-import type { Invoice, Money } from '../../api/types.ts'
-import { useFormatMoney } from '../../lib/money.ts'
-import { InvoiceDueDate } from './InvoiceDueDate.tsx'
+import type { Invoice, Money } from '../../../api/types.ts'
+import { useFormatCents, useFormatMoney } from '../../../lib/useFormatMoney.ts'
+import { InvoiceDueDate } from './invoice-search/InvoiceDueDate.tsx'
 
 /** Chosen invoice and its difference to the payment. */
 export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; paymentAmount: Money }) {
   const formatMoney = useFormatMoney()
+  const formatCents = useFormatCents(paymentAmount.currency)
   const difference = paymentAmount.amountMinor - invoice.amount.amountMinor
 
   return (
@@ -46,7 +47,7 @@ export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; 
                 id="invoice.amountMismatch.title"
                 values={{
                   direction: difference < 0 ? 'lower' : 'higher',
-                  difference: formatMoney({ ...paymentAmount, amountMinor: Math.abs(difference) }),
+                  difference: formatCents(Math.abs(difference)),
                 }}
               />
             </Alert.Title>

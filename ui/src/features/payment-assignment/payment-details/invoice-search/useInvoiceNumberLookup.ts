@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
-import { invoiceSearchOptions } from '../../api/invoices.ts'
+import { invoiceSearchOptions } from '../../../../api/invoices.ts'
 import { type InvoiceInputResolution, resolveInvoiceInput } from './invoiceInput.ts'
 
 /**

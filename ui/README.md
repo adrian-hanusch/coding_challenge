@@ -20,6 +20,7 @@ Fehlermeldung ab.
 | `pnpm build`     | Typecheck und Produktions-Build nach `dist/`                     |
 | `pnpm typecheck` | Nur TypeScript prüfen                                            |
 | `pnpm lint`      | ESLint (`pnpm lint:fix` behebt, was automatisch geht)            |
+| `pnpm test`      | Unit-Tests mit Vitest (`pnpm test:watch` im Watch-Modus)         |
 | `pnpm format`    | Prettier formatiert alle Dateien (`pnpm format:check` prüft nur) |
 | `pnpm preview`   | Produktions-Build lokal ausliefern                               |
 
@@ -91,21 +92,27 @@ src/
       navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
   pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
     PaymentsPage        /payments, Zahlung per ID öffnen, mit Mock-API zusätzlich die Testzahlungen
-    AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung und hält die Auswahl
+    AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung (Fehler, Skeleton)
   features/payments/    Einstieg: OpenPaymentForm, DemoPaymentList (nur Dev, Fixtures nicht im Build)
-  features/payment-assignment/  Bausteine der Zuordnung
-    PaymentDetailsForm  Zahlungsdaten (nur Anzeige, A11) und Rechnungsauswahl
-    InvoiceSearchField  Rechnungsauswahl (ComboBox), Zustand des Eingabefelds
-    useInvoiceSearch    Serverseitige Suche mit Debounce und Paginierung, gruppiert nach Absender
-    useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
-    invoiceInput.ts     Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
+  features/payment-assignment/  Zuordnung, ein Unterordner pro UI-Komponente der Aufgabe
+    AssignmentForm      Eingaben zur geladenen Zahlung: hält Rechnung und Aufteilung
+    payment-details/    Payment Detail Form: Zahlungsdaten (nur Anzeige, A11) und gewählte Rechnung
+      invoice-search/   Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
+        useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
+        invoiceInput.ts         Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
+    fee-splitter/       Fee Splitter: Gebühren und Auszahlung (berechnet, überschreibbar, A1)
+      useSplitDraft     Entwurf der Aufteilung, Auswertung, berührte Felder
+      SplitErrorAlert   Fehler der Aufteilung (Gebühren zu hoch, Summe stimmt nicht)
   domain/invoice.ts     Fachregel: nur offene Rechnungen wählbar (A3)
+  domain/split.ts       Aufteilung in Cent: Entwurf, Berechnung, Prüfung (reine Funktionen)
+  lib/money.ts          Beträge ohne React: Eingabe in Cent umrechnen, Obergrenze
+  lib/useFormatMoney.ts Beträge in der aktiven Sprache formatieren
   i18n/                 react-intl + React Aria mit einer gemeinsamen Sprachquelle
     localeStore.ts      Zustand: gewählte Sprache (gespeichert)
     messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
   app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
   components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
-  components/           Seitenübergreifend: Page, PageCard, SectionHeader, PaymentStatusChip
+  components/           Seitenübergreifend: Page, PageCard, SectionHeader, PaymentStatusChip, MoneyField (Cent)
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
   mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
     browser.ts          Start im Browser (nur Dev)

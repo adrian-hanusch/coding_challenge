@@ -9,10 +9,10 @@ import {
   ListBoxLoadMoreItem,
   Spinner,
 } from '@heroui/react'
-import { Typography } from '../../components/Typography.tsx'
+import { Typography } from '../../../../components/Typography.tsx'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
-import type { Invoice } from '../../api/types.ts'
+import type { Invoice } from '../../../../api/types.ts'
 
 import { InvoiceInputErrorMessage } from './InvoiceInputErrorMessage.tsx'
 import { InvoiceOption } from './InvoiceOption.tsx'

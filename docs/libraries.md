@@ -17,8 +17,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 | Icons | lucide-react | Wahl |
 | Server-State | TanStack Query v5 | Vorgabe |
 | Routing | react-router v8 (Data Mode) | Vorgabe |
-| Formulare | TanStack Form v1 | Wahl |
-| Validierung | zod | Wahl |
+| Formulare / Validierung | ohne Library: `useState` + reine Funktionen in `domain/` | Wahl |
 | Client-State | Zustand (mit `persist`) | Vorgabe |
 | i18n | react-intl (FormatJS) | vorläufig (D1) |
 | API-Mocking | MSW v3 | vorläufig (A10) |
@@ -46,7 +45,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 
 | Komponente | Einsatz |
 |---|---|
-| `NumberField` | Gebühren. Liest Eingaben passend zur Sprache, Währungsformat über `formatOptions`, `minValue={0}`. |
+| `NumberField` | Gebühren. Liest Eingaben passend zur Sprache, Zahl ohne Symbol, Währung als `InputGroup.Suffix`, `minValue={0}`. |
 | `ComboBox` | Rechnungssuche (Bonus: Autocomplete). Für freie Eingabe der Nummer mit `allowsCustomValue`. Die klassische Combobox ist `ComboBox`, nicht die v3-Komponente `Autocomplete`. |
 | `Modal` / `AlertDialog` | Bestätigungsschritt (Bonus) |
 | `Toast` | Erfolgsmeldung |
@@ -56,7 +55,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 - Bekannte Stolperstellen:
   - `NumberField` liefert eine Gleitkommazahl und für ein leeres Feld `NaN`. Die Umrechnung in Cent passiert deshalb direkt am Feld.
   - Bei serverseitiger Suche muss der eingebaute Client-Filter der `ComboBox` ausgeschaltet werden. Dazu werden `items` und `inputValue` von außen gesteuert.
-  - Die eingebaute Validierung von React Aria wird **nicht** genutzt. Die Komponenten bekommen nur `isInvalid` und die Fehlermeldung aus dem Formular (siehe TanStack Form).
+  - Die eingebaute Validierung von React Aria wird **nicht** genutzt. Die Komponenten bekommen nur `isInvalid` und die Fehlermeldung aus der eigenen Prüfung (siehe Formular-State). Ausnahme: `minValue={0}` am `NumberField` lässt negative Eingaben gar nicht erst zu.
 - Tailwind v4 wird über CSS konfiguriert (`@import "tailwindcss"`), eine `tailwind.config.js` gibt es nicht mehr.
 
 ### TanStack Query v5 *(Vorgabe)*
@@ -76,33 +75,44 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
   `react-aria-components` typisiert (`routerConfig.d.ts`), deshalb ist das Paket eine direkte Abhängigkeit.
 - Routen: `/payments` (optionale Übersicht) und `/payments/:paymentId/assign`. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
 
-### TanStack Form v1 + zod *(Wahl)*
+### Formular-State ohne Library *(Wahl)*
 
-**Entscheidung:** TanStack Form mit zod-Schemas.
+**Entscheidung:** `useState` in einem Custom Hook, Berechnung und Prüfung als reine Funktionen. Ursprünglich war TanStack Form
+mit zod geplant.
 
-| Kriterium | TanStack Form | React Hook Form | ohne Library |
+| Kriterium | ohne Library | TanStack Form + zod | React Hook Form |
 |---|---|---|---|
-| Passt zu React Aria (Felder werden vom Formular gesteuert) | ✅ von Haus aus | ⚠️ jedes Feld braucht einen `Controller` | ✅ |
-| Typsicherheit (Feldnamen, Werte) | ✅ sehr stark | ✅ gut | ⚠️ selbst bauen |
-| Feldübergreifende Prüfung (Gebühren ≤ Betrag) | ✅ Validator auf Formularebene, `onChangeListenTo` | ⚠️ `superRefine` + `trigger()` von Hand | ⚠️ selbst bauen |
-| Zustände wie „berührt“, „geändert“, „wird abgeschickt“ | ✅ | ✅ | ❌ selbst bauen |
-| Schema-Anbindung | ✅ Standard Schema, ohne Adapter | ✅ über `@hookform/resolvers` | ✅ direkt |
-| Ökosystem / Beispiele | ⚠️ kleiner | ✅ sehr groß | – |
+| Passt zu React Aria (Felder werden von außen gesteuert) | ✅ | ✅ von Haus aus | ⚠️ jedes Feld braucht einen `Controller` |
+| Feldübergreifende Prüfung (Gebühren ≤ Betrag, Summe = Betrag) | ✅ eine reine Funktion | ✅ Validator auf Formularebene | ⚠️ `superRefine` + `trigger()` von Hand |
+| Zustände wie „berührt“, „wird abgeschickt“ | ⚠️ selbst gebaut (ein `Set`, `isPending` der Mutation) | ✅ | ✅ |
+| Zusätzliche Abhängigkeiten | ✅ keine | ❌ zwei | ❌ eine bis zwei |
 
-- **Warum nicht React Hook Form:** Die Stärke von RHF ist, Werte direkt aus nativen Eingabefeldern zu lesen statt sie zu steuern. Diese Stärke fällt weg, weil die HeroUI-Komponenten gesteuert werden müssen. Übrig bliebe ein `Controller` für jedes Feld.
-- **Warum nicht ohne Library:** Für 4 Felder wäre das machbar. Die Zustände „berührt“ und „geändert“, die Steuerung des Fehlerzeitpunkts und der Absende-Zustand müssten aber von Hand gebaut werden. Der Mehrwert stünde in keinem Verhältnis zum Aufwand.
+- **Warum ohne Library:** Das Formular hat ein Rechnungsfeld und vier Beträge. Typprüfung und Parsen übernimmt das
+  `NumberField`, die Beträge kommen bereits als Cent an. Übrig bleiben zwei feldübergreifende Regeln. Dafür lohnen sich
+  zwei Libraries nicht, und Berechnung und Prüfung bleiben ohne React testbar.
+- **Warum nicht React Hook Form:** Die Stärke von RHF ist, Werte direkt aus nativen Eingabefeldern zu lesen. Diese
+  Stärke fällt weg, weil die HeroUI-Komponenten gesteuert werden müssen.
 - **Umsetzung:**
-  - Über `createFormHook` werden die HeroUI-Felder einmal angebunden. Das hält den Code für die einzelnen Felder kurz.
-  - Das zod-Schema ist die **einzige** Validierungsquelle. Es liefert Message-IDs statt Texten (siehe react-intl).
-  - Der vorgeschlagene Merchant-Betrag wird über `useStore(form.store, selector)` abgeleitet. Als Formularfeld
-    gespeichert wird nur eine Überschreibung durch den Nutzer (`merchantOverride`, A1).
-  - Fehlermeldungen erscheinen beim Verlassen eines Feldes oder beim Absenden, nicht bei jedem Tastendruck.
-  - Schema-Fehler kommen als Objekte, nicht als Strings. Die Anzeige liest deshalb `.message` aus.
+  - `domain/split.ts` enthält Entwurf (`SplitDraft`) und eine Funktion `evaluateSplit`, die Berechnung und Prüfung
+    zusammen liefert. Die Prüfung liefert Fehlercodes mit Beträgen, die Komponenten machen daraus ICU-Texte.
+  - `useSplitDraft` hält Entwurf und berührte Felder, ruft `evaluateSplit` einmal pro Rendern auf und bietet Setter
+    mit Updater-Funktionen an. `AssignmentForm` nutzt den Hook und gibt das Ergebnis als ein Objekt weiter, damit
+    Aufteilung und Zusammenfassung dieselben Werte zeigen. Die Seite selbst lädt nur die Zahlung.
+  - Gespeichert wird nur, was der Nutzer eingibt. Der vorgeschlagene Merchant-Betrag wird bei jedem Rendern berechnet,
+    als State existiert nur eine Überschreibung (`merchantOverride`, A1).
+  - `components/MoneyField` bindet das `NumberField` einmal an Cent an (`null` für ein leeres Feld). Mehr als zwei
+    Nachkommastellen rundet es nicht, sondern gibt sie als `{ tooPrecise: euros }` weiter, damit kein anderer Betrag als
+    der eingegebene übernommen wird. Die Umrechnung (`toAmountInput`, `toEuros`) liegt als reine Funktion in
+    `lib/money.ts`, die Formatierungs-Hooks liegen getrennt in `lib/useFormatMoney.ts`, damit `domain/` kein React
+    importiert.
+  - Fehlende Eingaben erscheinen beim Verlassen eines Feldes, nicht bei jedem Tastendruck. Welche Felder schon verlassen
+    wurden, hält `useSplitDraft`, damit das spätere Absenden alle Fehler zeigen kann. Die Summe wird erst geprüft, wenn alle
+    Felder gültig sind.
 
 ### Zustand + `persist` *(Vorgabe)*
 - Jede Art von State hat genau einen Platz:
   - Server-Daten → TanStack Query
-  - Formularwerte → TanStack Form
+  - Formularwerte → `useState` in `AssignmentForm` bzw. `useSplitDraft`, Berechnung und Prüfung als reine Funktionen in `domain/`
   - App-weiter Client-State (Sprachwahl, Sidebar eingeklappt) → Zustand
   - State, den nur eine Komponente braucht (mobiles Menü offen, Modal offen) → `useState`
 - Ein Store pro Thema, neben dem Code, der ihn nutzt:
@@ -116,7 +126,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 
 ### react-intl (FormatJS) *(vorläufig)*
 - Texte liegen in `de.json` und `en.json`. Die Schlüssel sind flach und durch Punkte gegliedert. Platzhalter folgen der ICU-Syntax (`{amount}`).
-- Beträge werden mit `intl.formatNumber(cents / 100, { style: 'currency', currency })` angezeigt. Das sind dieselben Optionen wie in den `formatOptions` des `NumberField`, damit Eingabe und Zusammenfassung gleich aussehen.
+- Beträge werden mit `intl.formatNumber(cents / 100, { style: 'currency', currency })` angezeigt. Im `NumberField` steht die Zahl mit denselben Trennzeichen, das Währungssymbol als Suffix daneben.
 - **Eine Sprachquelle** für `IntlProvider` (react-intl) und `I18nProvider` (React Aria) (D1).
 - Die Message-IDs sind typisiert: Über die globalen FormatJS-Typen (`FormatjsIntl.Message`) gelten die Schlüssel aus `en.json` als einzige erlaubten IDs. Eine unbekannte ID an `<FormattedMessage>` oder `formatMessage` schlägt schon im Typecheck fehl.
 - Fehlt in `de.json` ein Schlüssel, meldet das der Typecheck (`satisfies`). Ein Test prüft zusätzlich, dass `de.json` keine überzähligen Schlüssel enthält.
@@ -148,7 +158,8 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 
 | Library | Grund |
 |---|---|
-| Redux / RTK | Unnötig: Server-State liegt in Query, Formular-State in TanStack Form |
+| Redux / RTK | Unnötig: Server-State liegt in Query, Formular-State ist lokal |
+| TanStack Form, zod, React Hook Form | Für ein Rechnungsfeld und vier Beträge zu viel, siehe Formular-State |
 | Formik | Wird kaum noch weiterentwickelt, schwache Typisierung |
 | dinero.js / big.js | Es gibt nur Addition und Subtraktion ganzer Cent-Beträge (A8). Ein kleines eigenes Modul reicht. Bei Prozent-Gebühren oder mehreren Währungen neu bewerten. |
 | axios | `fetch` reicht, und MSW fängt es direkt ab |
