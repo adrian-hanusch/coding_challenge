@@ -20,6 +20,7 @@ Fehlermeldung ab.
 | `pnpm build`     | Typecheck und Produktions-Build nach `dist/`                     |
 | `pnpm typecheck` | Nur TypeScript prüfen                                            |
 | `pnpm lint`      | ESLint (`pnpm lint:fix` behebt, was automatisch geht)            |
+| `pnpm test`      | Unit-Tests mit Vitest (`pnpm test:watch` im Watch-Modus)         |
 | `pnpm format`    | Prettier formatiert alle Dateien (`pnpm format:check` prüft nur) |
 | `pnpm preview`   | Produktions-Build lokal ausliefern                               |
 
