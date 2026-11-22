@@ -2,11 +2,12 @@ import { Button } from '@heroui/react'
 import { useQuery } from '@tanstack/react-query'
 import { FormattedMessage } from 'react-intl'
 import { useParams } from 'react-router'
+
 import { ApiError } from '../api/client.ts'
 import { paymentQueryOptions } from '../api/payments.ts'
 import { Page } from '../components/Page.tsx'
-import { AssignmentForm } from '../features/payment-assignment/AssignmentForm.tsx'
 import { PaymentDetailsSkeleton } from '../features/payment-assignment/payment-details/PaymentDetailsSkeleton.tsx'
+import { PaymentAssignment } from '../features/payment-assignment/PaymentAssignment.tsx'
 import { NotFoundPage } from './NotFoundPage.tsx'
 import { StatusPage } from './StatusPage.tsx'
 
@@ -40,7 +41,7 @@ function AssignPayment({ paymentId }: { paymentId: string }) {
 
   return (
     <Page title={<FormattedMessage id="assign.title" />} description={<FormattedMessage id="assign.subtitle" />}>
-      {payment ? <AssignmentForm payment={payment} /> : <PaymentDetailsSkeleton />}
+      {payment ? <PaymentAssignment payment={payment} /> : <PaymentDetailsSkeleton />}
     </Page>
   )
 }
