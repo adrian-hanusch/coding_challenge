@@ -1,6 +1,7 @@
 import { Alert } from '@heroui/react'
 import type { ReactNode } from 'react'
 import { FormattedMessage } from 'react-intl'
+
 import type { Money } from '../../../api/types.ts'
 import type { SplitError } from '../../../domain/split.ts'
 import { useFormatCents } from '../../../lib/useFormatMoney.ts'

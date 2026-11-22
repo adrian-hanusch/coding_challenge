@@ -1,4 +1,5 @@
 import { useIntl } from 'react-intl'
+
 import { NavItem } from './NavItem.tsx'
 import { NAV_ITEMS } from './navItems.ts'
 

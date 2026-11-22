@@ -1,4 +1,5 @@
 import { infiniteQueryOptions } from '@tanstack/react-query'
+
 import { apiFetch } from './client.ts'
 import { DEFAULT_INVOICE_LIMIT, type Invoice, type InvoiceSearchParams, type Page } from './types.ts'
 

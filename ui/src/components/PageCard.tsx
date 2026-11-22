@@ -1,5 +1,6 @@
 import { Card, cn } from '@heroui/react'
 import type { ComponentProps, ReactNode } from 'react'
+
 import { SectionHeader } from './SectionHeader.tsx'
 
 interface PageCardProps extends Omit<ComponentProps<typeof Card>, 'title'> {

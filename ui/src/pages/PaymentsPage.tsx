@@ -1,4 +1,5 @@
 import { FormattedMessage } from 'react-intl'
+
 import { Page } from '../components/Page.tsx'
 import { PageCard } from '../components/PageCard.tsx'
 import { DemoPaymentList } from '../features/payments/DemoPaymentList.tsx'

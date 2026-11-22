@@ -1,6 +1,7 @@
 import { Description, FieldError, InputGroup, Label, NumberField } from '@heroui/react'
 import { type ReactNode, useMemo } from 'react'
 import { useIntl } from 'react-intl'
+
 import type { Money } from '../api/types.ts'
 import { type AmountInput, MAX_AMOUNT_MINOR, stripCurrency, toAmountInput, toEuros } from '../lib/money.ts'
 

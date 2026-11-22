@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
+
 import { db } from './db.ts'
 import { handlers } from './handlers/index.ts'
 import { loadScenario } from './scenario.ts'

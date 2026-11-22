@@ -1,4 +1,5 @@
 import { FormattedMessage } from 'react-intl'
+
 import type { InvoiceInputError } from './invoiceInput.ts'
 
 export function InvoiceInputErrorMessage({ error }: { error: InvoiceInputError }) {
