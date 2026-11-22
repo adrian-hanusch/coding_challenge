@@ -93,7 +93,7 @@ interface Payment {
 }
 
 // API shape: merchantId is resolved to { id, name } so search results and
-// the summary can show the merchant name without a second request.
+// the confirmation modal can show the merchant name without a second request.
 interface Invoice {
   id: string;
   invoiceNumber: string;            // plain number, e.g. "418" (A9)
@@ -132,15 +132,27 @@ interface SplitDraft {
   merchantOverride: AmountInput; // null = use the calculated payout (A1)
 }
 
-// AssignmentForm state: the invoice, plus useSplitDraft(payment.amount) for the split
-invoice: Invoice | null;
+// PaymentAssignment state: the invoice, the open modal, plus useSplitDraft(payment.amount) for the split
+invoice: Invoice | null; // cleared when the server rejects it (INVOICE_NOT_OPEN, INVOICE_NOT_FOUND) and the modal closes
+isConfirming: boolean; // keeps the form mounted while the modal is open, even if a refetch finds the payment ASSIGNED
 draft: SplitDraft;
-touchedFees: Set<FeeType>; // fees whose "missing" error is shown; a submit can mark all of them
+touchedFees: Set<FeeType>; // fees whose "missing" error is shown, i.e. the user has left the field
 
 // derived on each render inside useSplitDraft, never stored
 const evaluation = evaluateSplit(payment.amount.amountMinor, draft);
-// → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error }
+// → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error, validSplit }
+// validSplit: all four amounts once there is no error left, else null (what the modal confirms)
+
+// derived in ConfirmAssignmentBar
+const blockers = assignmentBlockers(invoice, evaluation); // 'invoiceMissing' | 'splitIncomplete' | 'splitUnbalanced'
+
+// local to the confirmation modal, reset on every opening
+isAcknowledged: boolean; // difference to the invoice amount checked (A4)
 ```
+
+The *Review and confirm* button below the fee splitter is disabled while `blockers` is not empty, and lists them next
+to it. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
+exactly the amounts shown in it.
 
 An override equal to the calculated payout is stored as `null` (`withMerchantPayout`), so it does not stay as a stale
 manual value.
@@ -174,15 +186,15 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
 | Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for 9999. Check the number or search by merchant. |
-| Each fee is entered (shown after leaving the field or on submit) | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
+| Each fee is entered (shown after leaving the field; until then it is listed next to the confirm button) | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
 | Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values", D1 | – (the field rejects other characters and negative input, and clamps larger values) |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
 | Σ of all four positions = payment amount, checked once all fields are valid | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
 | Invoice is `OPEN` | blocking | A3 | Invoice 418 is already paid. Select a different invoice. |
-| Payment amount = invoice amount | warning | A4 | The payment differs from the invoice amount by €50.00. You will confirm this in the next step. |
+| Payment amount = invoice amount | warning | A4 | The payment is €50.00 lower than the invoice amount. You can still assign it. You will confirm the difference in the last step. |
 | Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |
-| Payment is still `UNMATCHED` on the server | blocking | A10 | This payment has already been assigned. Reload the page. |
+| Payment is still `UNMATCHED` on the server | blocking | A10 | This payment is already assigned. It can no longer be assigned to another invoice. Action: *Show current state* |
 
 ## API
 

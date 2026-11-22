@@ -22,7 +22,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 | i18n | react-intl (FormatJS) | vorläufig (D1) |
 | API-Mocking | MSW v3 | vorläufig (A10) |
 | Tests | Vitest + React Testing Library + user-event | Wahl |
-| Codequalität | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query) + Prettier | Wahl |
+| Codequalität | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query, simple-import-sort) + Prettier | Wahl |
 
 ---
 
@@ -96,8 +96,8 @@ mit zod geplant.
   - `domain/split.ts` enthält Entwurf (`SplitDraft`) und eine Funktion `evaluateSplit`, die Berechnung und Prüfung
     zusammen liefert. Die Prüfung liefert Fehlercodes mit Beträgen, die Komponenten machen daraus ICU-Texte.
   - `useSplitDraft` hält Entwurf und berührte Felder, ruft `evaluateSplit` einmal pro Rendern auf und bietet Setter
-    mit Updater-Funktionen an. `AssignmentForm` nutzt den Hook und gibt das Ergebnis als ein Objekt weiter, damit
-    Aufteilung und Zusammenfassung dieselben Werte zeigen. Die Seite selbst lädt nur die Zahlung.
+    mit Updater-Funktionen an. `PaymentAssignment` nutzt den Hook und gibt das Ergebnis als ein Objekt weiter, damit
+    Aufteilung und Bestätigungsdialog dieselben Werte zeigen. Die Seite selbst lädt nur die Zahlung.
   - Gespeichert wird nur, was der Nutzer eingibt. Der vorgeschlagene Merchant-Betrag wird bei jedem Rendern berechnet,
     als State existiert nur eine Überschreibung (`merchantOverride`, A1).
   - `components/MoneyField` bindet das `NumberField` einmal an Cent an (`null` für ein leeres Feld). Mehr als zwei
@@ -106,13 +106,13 @@ mit zod geplant.
     `lib/money.ts`, die Formatierungs-Hooks liegen getrennt in `lib/useFormatMoney.ts`, damit `domain/` kein React
     importiert.
   - Fehlende Eingaben erscheinen beim Verlassen eines Feldes, nicht bei jedem Tastendruck. Welche Felder schon verlassen
-    wurden, hält `useSplitDraft`, damit das spätere Absenden alle Fehler zeigen kann. Die Summe wird erst geprüft, wenn alle
-    Felder gültig sind.
+    wurden, hält `useSplitDraft`. Was noch fehlt, steht neben dem gesperrten Bestätigen-Button.
+    Die Summe wird erst geprüft, wenn alle Felder gültig sind.
 
 ### Zustand + `persist` *(Vorgabe)*
 - Jede Art von State hat genau einen Platz:
   - Server-Daten → TanStack Query
-  - Formularwerte → `useState` in `AssignmentForm` bzw. `useSplitDraft`, Berechnung und Prüfung als reine Funktionen in `domain/`
+  - Formularwerte → `useState` in `PaymentAssignment` bzw. `useSplitDraft`, Berechnung und Prüfung als reine Funktionen in `domain/`
   - App-weiter Client-State (Sprachwahl, Sidebar eingeklappt) → Zustand
   - State, den nur eine Komponente braucht (mobiles Menü offen, Modal offen) → `useState`
 - Ein Store pro Thema, neben dem Code, der ihn nutzt:
@@ -150,6 +150,7 @@ mit zod geplant.
 ### ESLint + Prettier
 - `typescript-eslint` mit den strengsten typgestützten Regelsätzen (`strictTypeChecked` + `stylisticTypeChecked`).
 - `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` (prüft, dass Hot Reload in Vite funktioniert) und `@tanstack/eslint-plugin-query`. Letzteres erkennt unvollständige Query-Keys.
+- `eslint-plugin-simple-import-sort` legt die Reihenfolge der Importe fest: erst Pakete, dann relative Importe, jeweils alphabetisch. `pnpm lint:fix` sortiert automatisch.
 - Prettier kümmert sich nur um die Formatierung, ESLint nur um Regeln. `eslint-config-prettier` schaltet dazu alle ESLint-Regeln ab, die mit Prettier kollidieren würden.
 
 ---
