@@ -29,9 +29,18 @@ export interface SplitEvaluation {
   isOverridden: boolean
   fieldErrors: Partial<Record<SplitType, SplitFieldError>>
   error: SplitError | null
+  /** The amounts once the split has no errors left, i.e. what can be confirmed. */
+  validSplit: CompleteSplit | null
 }
 
-const centsOf = (amount: AmountInput) => (typeof amount === 'number' ? amount : 0)
+/** Cents per position. */
+export type CompleteSplit = Record<SplitType, number>
+
+const isComplete = (amounts: Record<SplitType, number | null>): amounts is CompleteSplit =>
+  SPLIT_TYPES.every((type) => amounts[type] !== null)
+
+const centsOrNull = (amount: AmountInput) => (typeof amount === 'number' ? amount : null)
+const centsOf = (amount: AmountInput) => centsOrNull(amount) ?? 0
 
 const calculatePayout = (paymentMinor: number, draft: SplitDraft) =>
   paymentMinor - FEE_TYPES.reduce((sum, type) => sum + centsOf(draft.fees[type]), 0)
@@ -56,15 +65,23 @@ export function evaluateSplit(paymentMinor: number, draft: SplitDraft): SplitEva
   }
   if (isTooPrecise(draft.merchantOverride)) fieldErrors.MERCHANT_PAYOUT = 'tooPrecise'
 
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0
   const difference = typeof draft.merchantOverride === 'number' ? calculatedPayout - draft.merchantOverride : 0
 
   let error: SplitError | null = null
   if (calculatedPayout < 0) error = { code: 'feesExceedPayment', excess: -calculatedPayout }
-  else if (Object.keys(fieldErrors).length === 0 && difference !== 0)
+  else if (!hasFieldErrors && difference !== 0)
     error = { code: 'sumMismatch', total: paymentMinor - difference, difference }
 
   let displayedPayout: AmountInput = draft.merchantOverride
   if (displayedPayout === null && calculatedPayout >= 0) displayedPayout = calculatedPayout
+
+  const amounts = {
+    PLATFORM_FEE: centsOrNull(draft.fees.PLATFORM_FEE),
+    PROVIDER_FEE: centsOrNull(draft.fees.PROVIDER_FEE),
+    LOGISTICS_FEE: centsOrNull(draft.fees.LOGISTICS_FEE),
+    MERCHANT_PAYOUT: centsOrNull(displayedPayout),
+  }
 
   return {
     calculatedPayout,
@@ -72,6 +89,8 @@ export function evaluateSplit(paymentMinor: number, draft: SplitDraft): SplitEva
     isOverridden: draft.merchantOverride !== null,
     fieldErrors,
     error,
+    // Without errors every amount is set; `isComplete` only narrows the type.
+    validSplit: !hasFieldErrors && error === null && isComplete(amounts) ? amounts : null,
   }
 }
 

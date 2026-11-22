@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { EMPTY_SPLIT_DRAFT, evaluateSplit, type SplitDraft, withFee, withMerchantPayout } from './split.ts'
 
 const PAYMENT = 124900
@@ -19,6 +20,16 @@ describe('evaluateSplit', () => {
     expect(result.isOverridden).toBe(false)
     expect(result.fieldErrors).toEqual({})
     expect(result.error).toBeNull()
+    expect(result.validSplit).toEqual({ ...COMPLETE_FEES, MERCHANT_PAYOUT: 115291 })
+  })
+
+  it('has no valid split while a field is missing or too precise', () => {
+    expect(evaluateSplit(PAYMENT, draft({ ...COMPLETE_FEES, LOGISTICS_FEE: null })).validSplit).toBeNull()
+    expect(evaluateSplit(PAYMENT, draft({ ...COMPLETE_FEES, PROVIDER_FEE: TOO_PRECISE })).validSplit).toBeNull()
+  })
+
+  it('has no valid split while the sum does not match', () => {
+    expect(evaluateSplit(PAYMENT, draft(COMPLETE_FEES, 114391)).validSplit).toBeNull()
   })
 
   it('reports empty fees as missing and counts them as 0', () => {
