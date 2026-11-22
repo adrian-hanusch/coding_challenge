@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+
 import { detectBrowserLocale, isSupportedLocale, type Locale } from './locales.ts'
 
 interface LocaleState {

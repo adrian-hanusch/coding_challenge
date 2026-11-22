@@ -2,6 +2,7 @@ import { Button, Drawer } from '@heroui/react'
 import { Menu } from 'lucide-react'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
+
 import { BrandLogo } from '../Brand.tsx'
 import { NavList } from './NavList.tsx'
 

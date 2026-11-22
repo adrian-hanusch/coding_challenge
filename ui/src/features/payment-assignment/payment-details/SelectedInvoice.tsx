@@ -1,16 +1,17 @@
-import { Alert } from '@heroui/react'
-import { Typography } from '../../../components/Typography.tsx'
-import { CircleCheck } from 'lucide-react'
 import { FormattedMessage } from 'react-intl'
+
 import type { Invoice, Money } from '../../../api/types.ts'
-import { useFormatCents, useFormatMoney } from '../../../lib/useFormatMoney.ts'
-import { InvoiceDueDate } from './invoice-search/InvoiceDueDate.tsx'
+import { SuccessNote } from '../../../components/SuccessNote.tsx'
+import { Typography } from '../../../components/Typography.tsx'
+import { invoiceDifference } from '../../../domain/invoice.ts'
+import { useFormatMoney } from '../../../lib/useFormatMoney.ts'
+import { InvoiceDueDate } from '../invoice/InvoiceDueDate.tsx'
+import { InvoiceMismatchAlert } from '../invoice/InvoiceMismatchAlert.tsx'
 
 /** Chosen invoice and its difference to the payment. */
 export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; paymentAmount: Money }) {
   const formatMoney = useFormatMoney()
-  const formatCents = useFormatCents(paymentAmount.currency)
-  const difference = paymentAmount.amountMinor - invoice.amount.amountMinor
+  const difference = invoiceDifference(paymentAmount, invoice)
 
   return (
     <div className="flex flex-col gap-3" data-testid="selected-invoice">
@@ -34,28 +35,17 @@ export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; 
       </div>
 
       {difference === 0 ? (
-        <Typography type="body-sm" className="flex items-center gap-2 text-success" data-testid="invoice-amount-match">
-          <CircleCheck aria-hidden className="size-4" />
+        <SuccessNote data-testid="invoice-amount-match">
           <FormattedMessage id="invoice.amountMatches" />
-        </Typography>
+        </SuccessNote>
       ) : (
-        <Alert status="warning" data-testid="invoice-amount-mismatch">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title>
-              <FormattedMessage
-                id="invoice.amountMismatch.title"
-                values={{
-                  direction: difference < 0 ? 'lower' : 'higher',
-                  difference: formatCents(Math.abs(difference)),
-                }}
-              />
-            </Alert.Title>
-            <Alert.Description>
-              <FormattedMessage id="invoice.amountMismatch.description" />
-            </Alert.Description>
-          </Alert.Content>
-        </Alert>
+        <InvoiceMismatchAlert
+          difference={difference}
+          currency={paymentAmount.currency}
+          data-testid="invoice-amount-mismatch"
+        >
+          <FormattedMessage id="invoice.amountMismatch.description" />
+        </InvoiceMismatchAlert>
       )}
     </div>
   )

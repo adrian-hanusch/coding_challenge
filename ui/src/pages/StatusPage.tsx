@@ -1,6 +1,7 @@
 import { Link } from '@heroui/react'
 import type { ReactNode } from 'react'
 import { FormattedMessage } from 'react-intl'
+
 import { PATHS } from '../app/paths.ts'
 import { Page } from '../components/Page.tsx'
 

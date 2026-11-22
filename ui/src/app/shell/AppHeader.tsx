@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+
 import { LocaleSwitch } from './LocaleSwitch.tsx'
 
 export function AppHeader({ leading }: { leading?: ReactNode }) {

@@ -95,24 +95,39 @@ src/
     AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung (Fehler, Skeleton)
   features/payments/    Einstieg: OpenPaymentForm, DemoPaymentList (nur Dev, Fixtures nicht im Build)
   features/payment-assignment/  Zuordnung, ein Unterordner pro UI-Komponente der Aufgabe
-    AssignmentForm      Eingaben zur geladenen Zahlung: hält Rechnung und Aufteilung
-    payment-details/    Payment Detail Form: Zahlungsdaten (nur Anzeige, A11) und gewählte Rechnung
+    PaymentAssignment   Steuert den Ablauf: hält Rechnung, Aufteilung und Dialog, zeigt je Zustand die Abschnitte
+    payment-details/    Payment Detail Form
+      PaymentOverview   Zahlungsdaten (nur Anzeige, A11)
+      InvoiceSelection  Rechnung suchen und wählen, gewählte Rechnung
+      AssignedNotice    Ersetzt die Auswahl, wenn die Zahlung schon zugeordnet ist
       invoice-search/   Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
         useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
         invoiceInput.ts         Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
+    invoice/            Rechnungsbausteine für Auswahl und Dialog: Status, Fälligkeit, Betragsabweichung (A4)
+      MismatchAcknowledgement  Hinweis auf die Differenz und Checkbox zur Bestätigung im Dialog
     fee-splitter/       Fee Splitter: Gebühren und Auszahlung (berechnet, überschreibbar, A1)
       useSplitDraft     Entwurf der Aufteilung, Auswertung, berührte Felder
       SplitErrorAlert   Fehler der Aufteilung (Gebühren zu hoch, Summe stimmt nicht)
-  domain/invoice.ts     Fachregel: nur offene Rechnungen wählbar (A3)
+    confirmation/       Summary Section als Bestätigungsdialog, dazu das Ergebnis (A2)
+      ConfirmAssignmentBar     Button unter der Aufteilung, nennt fehlende Eingaben, öffnet den Dialog
+      ConfirmAssignmentDialog  Modal: Zusammenfassung von allem, was gespeichert wird; Differenz bestätigen (A4)
+      SplitBreakdown           Zahlung, Gebühren, Auszahlung, im Dialog und im Ergebnis gleich
+      useAssignPayment         useMutation zum Absenden, Toast, lädt Zahlung und Rechnungen neu
+      assignmentFailure        Fehlercodes des Servers als Fehlerarten, die der Nutzer beheben kann
+      AssignmentErrorAlert     Fehler des Servers beim Absenden, je Fehlerart ein Text
+      AssignmentResult         Erfolg mit der Aufteilung, wie der Server sie gespeichert hat (A12)
+  domain/assignment.ts  Was die Bestätigung blockiert, Splits für die API und zurück
+  domain/invoice.ts     Nur offene Rechnungen wählbar (A3), Differenz zwischen Zahlung und Rechnung
   domain/split.ts       Aufteilung in Cent: Entwurf, Berechnung, Prüfung (reine Funktionen)
   lib/money.ts          Beträge ohne React: Eingabe in Cent umrechnen, Obergrenze
   lib/useFormatMoney.ts Beträge in der aktiven Sprache formatieren
+  lib/useFormatDate.ts  Fälligkeit (reines Datum, UTC) und Zeitpunkte in der aktiven Sprache formatieren
   i18n/                 react-intl + React Aria mit einer gemeinsamen Sprachquelle
     localeStore.ts      Zustand: gewählte Sprache (gespeichert)
     messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
   app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
   components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
-  components/           Seitenübergreifend: Page, PageCard, SectionHeader, PaymentStatusChip, MoneyField (Cent)
+  components/           Seitenübergreifend: Page, PageCard, SectionHeader, Detail/DetailList, SuccessNote, PaymentStatusChip, MoneyField (Cent)
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
   mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
     browser.ts          Start im Browser (nur Dev)

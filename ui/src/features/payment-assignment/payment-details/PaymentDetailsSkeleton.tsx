@@ -1,4 +1,5 @@
 import { Skeleton } from '@heroui/react'
+
 import { PaymentCard } from './PaymentCard.tsx'
 
 export function PaymentDetailsSkeleton() {

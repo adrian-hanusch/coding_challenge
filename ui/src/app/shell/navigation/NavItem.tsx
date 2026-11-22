@@ -1,6 +1,7 @@
 import { cn, Link, Tooltip } from '@heroui/react'
 import { useIntl } from 'react-intl'
 import { useMatch } from 'react-router'
+
 import type { NavItemConfig } from './navItems.ts'
 
 interface NavItemProps {

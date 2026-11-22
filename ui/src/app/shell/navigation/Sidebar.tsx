@@ -1,7 +1,8 @@
 import { cn } from '@heroui/react'
+
 import { Brand } from '../Brand.tsx'
-import { NavList } from './NavList.tsx'
 import { useNavigationStore } from './navigationStore.ts'
+import { NavList } from './NavList.tsx'
 import { SidebarToggle } from './SidebarToggle.tsx'
 
 const SIDEBAR_ID = 'app-sidebar'

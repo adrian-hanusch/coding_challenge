@@ -1,4 +1,5 @@
 import { CreditCard, type LucideIcon } from 'lucide-react'
+
 import { PATHS } from '../../paths.ts'
 
 export interface NavItemConfig {

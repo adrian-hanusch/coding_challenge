@@ -1,10 +1,11 @@
 import { ListBox } from '@heroui/react'
-import { Typography } from '../../../../components/Typography.tsx'
+
 import type { Invoice } from '../../../../api/types.ts'
+import { Typography } from '../../../../components/Typography.tsx'
 import { isSelectable } from '../../../../domain/invoice.ts'
 import { useFormatMoney } from '../../../../lib/useFormatMoney.ts'
-import { InvoiceDueDate } from './InvoiceDueDate.tsx'
-import { InvoiceStatusChip } from './InvoiceStatusChip.tsx'
+import { InvoiceDueDate } from '../../invoice/InvoiceDueDate.tsx'
+import { InvoiceStatusChip } from '../../invoice/InvoiceStatusChip.tsx'
 
 export function InvoiceOption({ invoice }: { invoice: Invoice }) {
   const formatMoney = useFormatMoney()

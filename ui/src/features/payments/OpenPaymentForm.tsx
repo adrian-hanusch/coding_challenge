@@ -2,6 +2,7 @@ import { Button, Description, FieldError, Input, Label, TextField } from '@herou
 import { type SyntheticEvent, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { useNavigate } from 'react-router'
+
 import { assignPaymentPath } from '../../app/paths.ts'
 
 export function OpenPaymentForm() {

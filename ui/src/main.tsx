@@ -1,9 +1,11 @@
+import './index.css'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import { RouterProvider } from 'react-router/dom'
-import { router } from './app/router.tsx'
+
 import { AppProviders } from './app/AppProviders.tsx'
+import { router } from './app/router.tsx'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

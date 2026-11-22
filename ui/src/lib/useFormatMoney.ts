@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
+
 import type { Money } from '../api/types.ts'
 
 /** Formats integer cents in the active locale. */

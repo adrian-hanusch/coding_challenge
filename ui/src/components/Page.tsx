@@ -1,6 +1,7 @@
 import { cn } from '@heroui/react'
-import { Typography } from './Typography.tsx'
 import type { ComponentProps, ReactNode } from 'react'
+
+import { Typography } from './Typography.tsx'
 
 interface PageProps extends Omit<ComponentProps<'div'>, 'title'> {
   title: ReactNode

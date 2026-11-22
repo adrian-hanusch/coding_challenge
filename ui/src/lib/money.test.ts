@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { stripCurrency, toAmountInput, toEuros } from './money.ts'
 
 describe('stripCurrency', () => {

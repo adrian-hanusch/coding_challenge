@@ -2,6 +2,7 @@ import { Button } from '@heroui/react'
 import { useEffect } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { isRouteErrorResponse, useRouteError } from 'react-router'
+
 import { StatusPage } from '../pages/StatusPage.tsx'
 
 export function RouteError() {

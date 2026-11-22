@@ -1,7 +1,8 @@
 import { ToggleButton, ToggleButtonGroup } from '@heroui/react'
 import { useIntl } from 'react-intl'
-import { useLocaleStore } from '../../i18n/localeStore.ts'
+
 import { isSupportedLocale, SUPPORTED_LOCALES } from '../../i18n/locales.ts'
+import { useLocaleStore } from '../../i18n/localeStore.ts'
 
 export function LocaleSwitch() {
   const intl = useIntl()

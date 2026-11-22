@@ -1,4 +1,5 @@
 import { FormattedMessage } from 'react-intl'
+
 import { StatusPage } from './StatusPage.tsx'
 
 export function NotFoundPage() {

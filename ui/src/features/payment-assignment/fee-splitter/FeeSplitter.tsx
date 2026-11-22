@@ -1,12 +1,14 @@
 import { Button, Separator } from '@heroui/react'
 import { useId } from 'react'
 import { FormattedMessage } from 'react-intl'
+
 import type { Money } from '../../../api/types.ts'
 import { MoneyField } from '../../../components/MoneyField.tsx'
 import { PageCard } from '../../../components/PageCard.tsx'
 import { SectionHeader } from '../../../components/SectionHeader.tsx'
 import { FEE_TYPES, type SplitEvaluation, type SplitFieldError } from '../../../domain/split.ts'
 import type { AmountInput } from '../../../lib/money.ts'
+import { useFormatCents } from '../../../lib/useFormatMoney.ts'
 import { SplitErrorAlert } from './SplitErrorAlert.tsx'
 import type { SplitDraftState } from './useSplitDraft.ts'
 
@@ -19,6 +21,7 @@ interface FeeSplitterProps {
 export function FeeSplitter({ paymentAmount, split }: FeeSplitterProps) {
   const titleId = useId()
   const { draft, evaluation, touchedFees } = split
+  const formatCents = useFormatCents(paymentAmount.currency)
 
   return (
     <PageCard data-testid="fee-splitter">
@@ -47,7 +50,7 @@ export function FeeSplitter({ paymentAmount, split }: FeeSplitterProps) {
                 }}
                 currency={paymentAmount.currency}
                 error={visibleError ? <FieldErrorMessage error={visibleError} /> : undefined}
-                description={<FormattedMessage id="feeSplit.feeHint" />}
+                description={<FormattedMessage id="feeSplit.feeHint" values={{ zero: formatCents(0) }} />}
                 data-testid={`fee-${type}`}
               />
             )

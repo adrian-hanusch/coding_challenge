@@ -1,5 +1,6 @@
 import { useMediaQuery } from '@heroui/react'
 import { Outlet } from 'react-router'
+
 import { AppHeader } from './AppHeader.tsx'
 import { Brand } from './Brand.tsx'
 import { MobileNav } from './navigation/MobileNav.tsx'

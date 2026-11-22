@@ -1,5 +1,6 @@
-import { Typography } from './Typography.tsx'
 import type { ReactNode } from 'react'
+
+import { Typography } from './Typography.tsx'
 
 interface SectionHeaderProps {
   id?: string
