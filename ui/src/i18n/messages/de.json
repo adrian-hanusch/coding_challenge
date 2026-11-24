@@ -74,8 +74,6 @@
   "confirm.invoiceNumber": "Rechnungsnummer",
   "confirm.merchant": "Händler",
   "confirm.dueDate": "Fällig am",
-  "confirm.ready": "Die Aufteilung ergibt den Zahlungsbetrag. Sie können die Zuordnung bestätigen.",
-  "confirm.blockers.title": "Bevor Sie bestätigen können:",
   "confirm.blocker": "{blocker, select, invoiceMissing {Wählen Sie die Rechnung, zu der die Zahlung gehört.} splitIncomplete {Geben Sie alle Gebühren ein (je höchstens zwei Nachkommastellen).} splitUnbalanced {Korrigieren Sie die Aufteilung, sodass sie den Zahlungsbetrag ergibt.} other {{blocker}}}",
   "confirm.open": "Prüfen und bestätigen",
   "confirm.title": "Zuordnung bestätigen",

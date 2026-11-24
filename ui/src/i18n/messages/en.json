@@ -74,8 +74,6 @@
   "confirm.invoiceNumber": "Invoice number",
   "confirm.merchant": "Merchant",
   "confirm.dueDate": "Due date",
-  "confirm.ready": "The split adds up to the payment. You can confirm the assignment.",
-  "confirm.blockers.title": "Before you can confirm:",
   "confirm.blocker": "{blocker, select, invoiceMissing {Select the invoice the payment belongs to.} splitIncomplete {Enter all fees (at most two decimal places each).} splitUnbalanced {Correct the split so it adds up to the payment.} other {{blocker}}}",
   "confirm.open": "Review and confirm",
   "confirm.title": "Confirm assignment",

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { Invoice, Payment } from '../../api/types.ts'
 import { AssignmentResult } from './confirmation/AssignmentResult.tsx'
-import { ConfirmAssignmentBar } from './confirmation/ConfirmAssignmentBar.tsx'
+import { ConfirmAssignment } from './confirmation/ConfirmAssignment.tsx'
 import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
 import { useSplitDraft } from './fee-splitter/useSplitDraft.ts'
@@ -44,7 +44,7 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
       ) : isEditable ? (
         <>
           <FeeSplitter paymentAmount={payment.amount} split={split} />
-          <ConfirmAssignmentBar
+          <ConfirmAssignment
             payment={payment}
             invoice={invoice}
             split={split.evaluation}

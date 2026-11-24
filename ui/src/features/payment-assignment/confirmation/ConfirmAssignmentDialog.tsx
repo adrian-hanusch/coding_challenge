@@ -15,31 +15,40 @@ import { isRetryable } from './assignmentFailure.ts'
 import { SplitBreakdown } from './SplitBreakdown.tsx'
 import type { AssignPaymentMutation } from './useAssignPayment.ts'
 
-interface ConfirmAssignmentDialogProps {
+interface DialogContentProps {
   payment: Payment
   invoice: Invoice
   split: CompleteSplit
   assign: AssignPaymentMutation
 }
 
-/** Place it inside a `Modal` root, next to the trigger. */
-export function ConfirmAssignmentDialog(props: ConfirmAssignmentDialogProps) {
-  const isPending = props.assign.isPending
+interface ConfirmAssignmentDialogProps extends DialogContentProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function ConfirmAssignmentDialog({ isOpen, onClose, ...content }: ConfirmAssignmentDialogProps) {
+  const isPending = content.assign.isPending
 
   return (
-    <Modal.Backdrop isDismissable={!isPending} isKeyboardDismissDisabled={isPending}>
+    <Modal.Backdrop
+      isOpen={isOpen}
+      onOpenChange={onClose}
+      isDismissable={!isPending}
+      isKeyboardDismissDisabled={isPending}
+    >
       <Modal.Container size="lg" scroll="inside">
         <Modal.Dialog data-testid="confirm-assignment-dialog">
           <Modal.CloseTrigger isDisabled={isPending} />
           {/* The dialog unmounts its content when it closes, so each opening starts unacknowledged. */}
-          <DialogContent {...props} />
+          <DialogContent {...content} />
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
   )
 }
 
-function DialogContent({ payment, invoice, split, assign }: ConfirmAssignmentDialogProps) {
+function DialogContent({ payment, invoice, split, assign }: DialogContentProps) {
   const formatDateTime = useFormatDateTime()
   const formatPlainDate = useFormatPlainDate()
   const formatMoney = useFormatMoney()
