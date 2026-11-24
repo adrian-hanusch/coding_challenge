@@ -1,43 +1,23 @@
 import { http, HttpResponse } from 'msw'
 
-import {
-  DEFAULT_INVOICE_LIMIT,
-  type FieldError,
-  type Invoice,
-  type InvoiceSearchParams,
-  type Page,
-} from '../../api/types.ts'
+import { type FieldError, type Invoice, type Page } from '../../api/types.ts'
 import { db } from '../db.ts'
 import { problem } from '../problem.ts'
 import { withScenario } from '../scenario.ts'
+import { pageOf, type PageQuery, parsePageQuery } from '../searchParams.ts'
 
-const MAX_LIMIT = 50
-const MAX_QUERY_LENGTH = 100
-
-type ParsedSearch = Required<InvoiceSearchParams>
-
-function parseInteger(value: string | null, fallback: number, min: number, max: number): number | null {
-  if (value === null) return fallback
-  if (!/^\d+$/.test(value)) return null
-  const parsed = Number(value)
-  return parsed >= min && parsed <= max ? parsed : null
+interface InvoiceSearch extends PageQuery {
+  /** Ranks this customer's invoices first. Does not filter. */
+  customerId: string | null
 }
 
-function parseSearch(searchParams: URLSearchParams): { search: ParsedSearch } | { errors: FieldError[] } {
-  // Trimmed here, so the length check and the search see the same value.
-  const q = (searchParams.get('q') ?? '').trim()
-  const offset = parseInteger(searchParams.get('offset'), 0, 0, Number.MAX_SAFE_INTEGER)
-  const limit = parseInteger(searchParams.get('limit'), DEFAULT_INVOICE_LIMIT, 1, MAX_LIMIT)
-
-  const errors: FieldError[] = []
-  if (q.length > MAX_QUERY_LENGTH) errors.push({ field: 'q', code: 'TOO_LONG' })
-  if (offset === null) errors.push({ field: 'offset', code: 'OUT_OF_RANGE' })
-  if (limit === null) errors.push({ field: 'limit', code: 'OUT_OF_RANGE' })
-  if (offset === null || limit === null || errors.length > 0) return { errors }
+function parseSearch(searchParams: URLSearchParams): { search: InvoiceSearch } | { errors: FieldError[] } {
+  const parsed = parsePageQuery(searchParams)
+  if ('errors' in parsed) return parsed
 
   // An empty `customerId=` means no customer, like a missing parameter.
   const customerId = searchParams.get('customerId')
-  return { search: { q, customerId: customerId === '' ? null : customerId, offset, limit } }
+  return { search: { ...parsed.query, customerId: customerId === '' ? null : customerId } }
 }
 
 /**
@@ -45,8 +25,9 @@ function parseSearch(searchParams: URLSearchParams): { search: ParsedSearch } | 
  * "not found" from "already paid". The order is total, so pages never overlap:
  * exact number match, the customer's invoices, OPEN first, due date, invoice number.
  */
-function searchInvoices(invoices: readonly Invoice[], { q, customerId, offset, limit }: ParsedSearch): Page<Invoice> {
-  const needle = q.toLowerCase()
+function searchInvoices(invoices: readonly Invoice[], search: InvoiceSearch): Page<Invoice> {
+  const { customerId } = search
+  const needle = search.q.toLowerCase()
   // The three ranking flags as one number, most significant first.
   const rank = (invoice: Invoice) =>
     (invoice.invoiceNumber.toLowerCase() === needle ? 0 : 4) +
@@ -68,8 +49,10 @@ function searchInvoices(invoices: readonly Invoice[], { q, customerId, offset, l
         a.invoice.invoiceNumber.localeCompare(b.invoice.invoiceNumber),
     )
 
-  const items = matches.slice(offset, offset + limit).map(({ invoice }) => invoice)
-  return { items, total: matches.length, offset, limit }
+  return pageOf(
+    matches.map(({ invoice }) => invoice),
+    search,
+  )
 }
 
 export const invoiceHandlers = [
