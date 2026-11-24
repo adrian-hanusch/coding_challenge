@@ -41,8 +41,9 @@ nötig. Vertrag und Fehlercodes: [docs/data-model.md](../docs/data-model.md#api)
 
 ### Testfälle
 
-Die Seite `/payments` listet alle Testzahlungen als Links. Direkt aufrufen lässt sich eine Zahlung über
-`/payments/<id>/assign`, z. B. `/payments/pay-exact/assign`.
+Unter `/payments` lassen sich alle nicht zugeordneten Testzahlungen in Schritt 1 suchen und wählen. Jede andere
+Zahlung öffnet man direkt über `/payments/<id>/assign`, z. B. `/payments/pay-assigned/assign` für den bereits
+zugeordneten Fall.
 
 | Zahlung              | Fall                                               |
 | -------------------- | -------------------------------------------------- |
@@ -70,7 +71,7 @@ Als URL-Parameter, sie gelten bis zum Schließen des Tabs:
 
 Werte für `mock-fail`:
 
-- `payment:500`, `search:500`, `assignment:500`: Serverfehler (`INTERNAL_ERROR`)
+- `payment:500`, `paymentSearch:500`, `search:500`, `assignment:500`: Serverfehler (`INTERNAL_ERROR`)
 - `assignment:409`: Zahlung wurde inzwischen zugeordnet (`PAYMENT_ALREADY_ASSIGNED`)
 - `assignment:409-invoice`: Rechnung ist nicht mehr offen (`INVOICE_NOT_OPEN`)
 
@@ -91,32 +92,32 @@ src/
     navigation/         Sidebar (Desktop), Drawer (Mobil), NavList/NavItem, navItems.ts
       navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
   pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
-    PaymentsPage        /payments, Zahlung per ID öffnen, mit Mock-API zusätzlich die Testzahlungen
+    SelectPaymentPage   /payments, Schritt 1: Zahlung wählen
     AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung (Fehler, Skeleton)
-  features/payments/    Einstieg: OpenPaymentForm, DemoPaymentList (nur Dev, Fixtures nicht im Build)
-  features/payment-assignment/  Zuordnung, ein Unterordner pro UI-Komponente der Aufgabe
-    PaymentAssignment   Steuert den Ablauf: hält Rechnung, Aufteilung und Dialog, zeigt je Zustand die Abschnitte
-    payment-details/    Payment Detail Form
-      PaymentOverview   Zahlungsdaten (nur Anzeige, A11)
-      InvoiceSelection  Rechnung suchen und wählen, gewählte Rechnung
+  features/payment-assignment/  Zuordnung, ein Unterordner pro Schritt
+    PaymentSelection    Ablauf ohne gewählte Zahlung: nur Schritt 1 ist offen
+    PaymentAssignment   Steuert den Ablauf: hält Rechnung, Aufteilung und Dialog, zeigt je Zustand die Schritte
+    PaymentAssignmentSkeleton  Schritte, während die Zahlung lädt
+    steps/              AssignmentSteps: Reihenfolge, Titel und Sperrhinweise der Schritte
+    payment/            Schritt 1: Zahlungsdaten (nur Anzeige, A11)
+      search/           Suche über nicht zugeordnete Zahlungen (ComboBox)
+    invoice/            Schritt 2: Rechnung wählen, gewählte Rechnung, Betragsabweichung (A4)
       AssignedNotice    Ersetzt die Auswahl, wenn die Zahlung schon zugeordnet ist
-      invoice-search/   Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
+      MismatchAcknowledgement  Hinweis auf die Differenz und Checkbox zur Bestätigung im Dialog
+      search/           Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
         useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
         invoiceInput.ts         Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
-    invoice/            Rechnungsbausteine für Auswahl und Dialog: Status, Fälligkeit, Betragsabweichung (A4)
-      MismatchAcknowledgement  Hinweis auf die Differenz und Checkbox zur Bestätigung im Dialog
     fee-splitter/       Fee Splitter: Gebühren und Auszahlung (berechnet, überschreibbar, A1)
       useSplitDraft     Entwurf der Aufteilung, Auswertung, berührte Felder
       SplitErrorAlert   Fehler der Aufteilung (Gebühren zu hoch, Summe stimmt nicht)
-    confirmation/       Summary Section als Bestätigungsdialog, dazu das Ergebnis (A2)
-      ConfirmAssignmentBar     Button unter der Aufteilung, nennt fehlende Eingaben, öffnet den Dialog
+    confirmation/       Summary Section als Bestätigungsdialog (A2)
+      ConfirmAssignment        Button unter den Schritten, nennt fehlende Eingaben, öffnet den Dialog
       ConfirmAssignmentDialog  Modal: Zusammenfassung von allem, was gespeichert wird; Differenz bestätigen (A4)
-      SplitBreakdown           Zahlung, Gebühren, Auszahlung, im Dialog und im Ergebnis gleich
-      useAssignPayment         useMutation zum Absenden, Toast, lädt Zahlung und Rechnungen neu
+      SplitBreakdown           Zahlung, Gebühren, Auszahlung im Dialog
+      useAssignPayment         useMutation zum Absenden, Erfolgstoast, hält Zahlungen und Rechnungen im Cache aktuell
       assignmentFailure        Fehlercodes des Servers als Fehlerarten, die der Nutzer beheben kann
       AssignmentErrorAlert     Fehler des Servers beim Absenden, je Fehlerart ein Text
-      AssignmentResult         Erfolg mit der Aufteilung, wie der Server sie gespeichert hat (A12)
-  domain/assignment.ts  Was die Bestätigung blockiert, Splits für die API und zurück
+  domain/assignment.ts  Was die Bestätigung blockiert, Splits für die API
   domain/invoice.ts     Nur offene Rechnungen wählbar (A3), Differenz zwischen Zahlung und Rechnung
   domain/split.ts       Aufteilung in Cent: Entwurf, Berechnung, Prüfung (reine Funktionen)
   lib/money.ts          Beträge ohne React: Eingabe in Cent umrechnen, Obergrenze
@@ -127,7 +128,8 @@ src/
     messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
   app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
   components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
-  components/           Seitenübergreifend: Page, PageCard, SectionHeader, Detail/DetailList, SuccessNote, PaymentStatusChip, MoneyField (Cent)
+  lib/usePagedSearch.ts Verzögerte Suche mit Paginierung für Zahlungen und Rechnungen
+  components/           Seitenübergreifend: Page, steps/, BlockableButton, search/, Detail/DetailList, SuccessNote, PaymentStatusChip, MoneyField (Cent)
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
   mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
     browser.ts          Start im Browser (nur Dev)
