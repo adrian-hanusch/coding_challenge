@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl'
 
 import type { Invoice, Payment } from '../../../api/types.ts'
 import { SectionHeader } from '../../../components/SectionHeader.tsx'
-import { InvoiceSearchField } from './invoice-search/InvoiceSearchField.tsx'
+import { InvoiceSearchField } from './search/InvoiceSearchField.tsx'
 import { SelectedInvoice } from './SelectedInvoice.tsx'
 
 interface InvoiceSelectionProps {

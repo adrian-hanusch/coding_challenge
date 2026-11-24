@@ -5,8 +5,8 @@ import { SuccessNote } from '../../../components/SuccessNote.tsx'
 import { Typography } from '../../../components/Typography.tsx'
 import { invoiceDifference } from '../../../domain/invoice.ts'
 import { useFormatMoney } from '../../../lib/useFormatMoney.ts'
-import { InvoiceDueDate } from '../invoice/InvoiceDueDate.tsx'
-import { InvoiceMismatchAlert } from '../invoice/InvoiceMismatchAlert.tsx'
+import { InvoiceDueDate } from './InvoiceDueDate.tsx'
+import { InvoiceMismatchAlert } from './InvoiceMismatchAlert.tsx'
 
 /** Chosen invoice and its difference to the payment. */
 export function SelectedInvoice({ invoice, paymentAmount }: { invoice: Invoice; paymentAmount: Money }) {

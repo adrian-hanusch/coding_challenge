@@ -6,10 +6,10 @@ import { ConfirmAssignmentBar } from './confirmation/ConfirmAssignmentBar.tsx'
 import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
 import { useSplitDraft } from './fee-splitter/useSplitDraft.ts'
-import { AssignedNotice } from './payment-details/AssignedNotice.tsx'
-import { InvoiceSelection } from './payment-details/InvoiceSelection.tsx'
-import { PaymentCard } from './payment-details/PaymentCard.tsx'
-import { PaymentOverview } from './payment-details/PaymentOverview.tsx'
+import { AssignedNotice } from './invoice/AssignedNotice.tsx'
+import { InvoiceSelection } from './invoice/InvoiceSelection.tsx'
+import { PaymentCard } from './payment/PaymentCard.tsx'
+import { PaymentOverview } from './payment/PaymentOverview.tsx'
 
 export function PaymentAssignment({ payment }: { payment: Payment }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
