@@ -63,17 +63,17 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 - Rechnungssuche über `queryKey: ['invoices', { search, customerId }]` mit verzögertem Suchbegriff (Debounce), `placeholderData: keepPreviousData` und `signal` zum Abbrechen. Damit kann eine veraltete Antwort keine neuere überschreiben.
 - Die Zuordnung läuft über `useMutation`:
   - `isPending` sperrt den Bestätigen-Button gegen doppeltes Absenden.
-  - Nach Erfolg werden die Abfragen für Zahlung und Rechnungen neu geladen.
+  - Nach Erfolg gilt die Zahlung im Cache als zugeordnet, die Zahlungssuche wird verworfen, die Rechnungen gelten als veraltet. Danach öffnet sich die Zahlungsauswahl.
 - Die Query Devtools sind nur in der Entwicklung aktiv.
 
 ### react-router v8, Data Mode *(Vorgabe)*
-- Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktioniert **`useBlocker`** für die Warnung bei ungespeicherten Änderungen.
+- Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktionieren die Fehlerseiten der Routen (**`errorElement`**).
 - Daten werden **nicht** über `loader` geladen, sondern nur über TanStack Query. So gibt es einen einzigen Cache und keine doppelte Datenhaltung.
 - Die HeroUI-Komponenten (React Aria) navigieren über `RouterProvider` aus `@heroui/react` in der Wurzelroute
   (`RouterLinkProvider`), angebunden an `useNavigate` und
   `useHref`. Links mit `href` laden die Seite dadurch nicht neu. `routerOptions` ist über eine Typ-Erweiterung von
   `react-aria-components` typisiert (`routerConfig.d.ts`), deshalb ist das Paket eine direkte Abhängigkeit.
-- Routen: `/payments` (optionale Übersicht) und `/payments/:paymentId/assign`. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
+- Routen: `/payments` (Schritt 1, Zahlung wählen) und `/payments/:paymentId/assign` (gewählte Zahlung, Schritte 2 und 3). Beide zeigen denselben Prozess. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
 
 ### Formular-State ohne Library *(Wahl)*
 

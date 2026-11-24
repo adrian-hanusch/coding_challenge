@@ -1,4 +1,3 @@
-import { useId } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Payment } from '../../../api/types.ts'
@@ -11,13 +10,11 @@ import { useFormatMoney } from '../../../lib/useFormatMoney.ts'
 export function PaymentOverview({ payment }: { payment: Payment }) {
   const formatDateTime = useFormatDateTime()
   const formatMoney = useFormatMoney()
-  const titleId = useId()
-
   return (
-    <section aria-labelledby={titleId} className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8" data-testid="payment-details">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <Typography type="body-sm" color="muted" id={titleId} elementType="h2">
+          <Typography type="body-sm" color="muted">
             <FormattedMessage id="paymentDetails.amount" />
           </Typography>
           <Typography type="h1" className="tabular-nums" elementType="p" data-testid="payment-amount">
@@ -38,6 +35,6 @@ export function PaymentOverview({ payment }: { payment: Payment }) {
           {formatDateTime(payment.receivedAt)}
         </Detail>
       </DetailList>
-    </section>
+    </div>
   )
 }

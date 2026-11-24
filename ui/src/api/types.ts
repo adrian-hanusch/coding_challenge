@@ -53,16 +53,8 @@ export interface CreateAssignmentRequest {
   splits: PaymentSplit[]
 }
 
-/** Page size of the invoice search when the request sets no `limit`. */
-export const DEFAULT_INVOICE_LIMIT = 10
-
-export interface InvoiceSearchParams {
-  q?: string
-  /** Ranks this customer's invoices first. Does not filter. */
-  customerId?: string | null
-  offset?: number
-  limit?: number
-}
+/** Longer search texts are rejected with INVALID_QUERY. */
+export const MAX_SEARCH_LENGTH = 100
 
 export interface Page<T> {
   items: T[]

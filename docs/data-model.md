@@ -128,7 +128,7 @@ the draft holds cents, not raw strings (`ui/src/domain/split.ts`, `ui/src/lib/mo
 type AmountInput = number | null | { tooPrecise: number };
 
 interface SplitDraft {
-  fees: Record<'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE', AmountInput>;
+  fees: Record<'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE', AmountInput>; // start empty
   merchantOverride: AmountInput; // null = use the calculated payout (A1)
 }
 
@@ -143,15 +143,16 @@ const evaluation = evaluateSplit(payment.amount.amountMinor, draft);
 // → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error, validSplit }
 // validSplit: all four amounts once there is no error left, else null (what the modal confirms)
 
-// derived in ConfirmAssignmentBar
+// derived in ConfirmAssignment
 const blockers = assignmentBlockers(invoice, evaluation); // 'invoiceMissing' | 'splitIncomplete' | 'splitUnbalanced'
 
 // local to the confirmation modal, reset on every opening
 isAcknowledged: boolean; // difference to the invoice amount checked (A4)
 ```
 
-The *Review and confirm* button below the fee splitter is disabled while `blockers` is not empty, and lists them next
-to it. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
+The *Review and confirm* button below the steps does not open the modal while `blockers` is not empty. It stays
+focusable (`aria-disabled`) and lists the blockers in a tooltip on hover, focus and press, so touch users can see them
+too. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
 exactly the amounts shown in it.
 
 An override equal to the calculated payout is stored as `null` (`withMerchantPayout`), so it does not stay as a stale
@@ -186,7 +187,7 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
 | Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for 9999. Check the number or search by merchant. |
-| Each fee is entered (shown after leaving the field; until then it is listed next to the confirm button) | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
+| Each fee is entered (shown after leaving the field; until then it is in the confirm button's tooltip). Fees start empty, so 0 is always a deliberate choice | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
 | Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values", D1 | – (the field rejects other characters and negative input, and clamps larger values) |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
@@ -202,9 +203,17 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 
 | Endpoint | Response | Purpose |
 |---|---|---|
+| `GET /payments?q=&status=UNMATCHED&offset=0&limit=10` | `Page<Payment>` | Choose the payment in the first step (A12) |
 | `GET /payments/{paymentId}` | `Payment` | Load the payment, also when it is already `ASSIGNED` |
 | `GET /invoices?q=&customerId=&offset=0&limit=10` | `Page<Invoice>` | Autocomplete and lookup of a typed invoice number |
 | `POST /payments/{paymentId}/assignment` | `201 PaymentAssignment` | Confirm the assignment with all four splits |
+
+### Payment search
+
+- `q` matches the payment id, sender name and reference, case-insensitive. Max. 100 characters.
+- `status` is required and must be `UNMATCHED`, the only status the UI searches for.
+- The order is total: exact id match, then `receivedAt` ascending (the payment that has waited longest first), then `id`.
+- Offset pagination like the invoice search: `offset` ≥ 0, `limit` 1–50 (default 10), response `{ items, total, offset, limit }`.
 
 ### Invoice search
 
@@ -225,7 +234,7 @@ RFC 9457 problem details (`application/problem+json`): `{ status, code, title, e
 
 | Status | `code` | Cause |
 |---|---|---|
-| 400 | `INVALID_QUERY` | Invalid search parameters |
+| 400 | `INVALID_QUERY` | Invalid search parameters, including a payment `status` other than `UNMATCHED` |
 | 404 | `PAYMENT_NOT_FOUND` | Unknown payment id |
 | 409 | `PAYMENT_ALREADY_ASSIGNED` | Payment is no longer `UNMATCHED` |
 | 409 | `INVOICE_NOT_OPEN` | Invoice is not `OPEN` or already assigned (A3) |

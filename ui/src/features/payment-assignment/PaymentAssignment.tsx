@@ -1,15 +1,19 @@
+import { Link } from '@heroui/react'
+import { ArrowLeftRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { FormattedMessage } from 'react-intl'
+import { Navigate } from 'react-router'
 
 import type { Invoice, Payment } from '../../api/types.ts'
-import { AssignmentResult } from './confirmation/AssignmentResult.tsx'
-import { ConfirmAssignmentBar } from './confirmation/ConfirmAssignmentBar.tsx'
+import { AFTER_ASSIGNMENT, PATHS } from '../../app/paths.ts'
+import { ConfirmAssignment } from './confirmation/ConfirmAssignment.tsx'
 import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
 import { useSplitDraft } from './fee-splitter/useSplitDraft.ts'
-import { AssignedNotice } from './payment-details/AssignedNotice.tsx'
-import { InvoiceSelection } from './payment-details/InvoiceSelection.tsx'
-import { PaymentCard } from './payment-details/PaymentCard.tsx'
-import { PaymentOverview } from './payment-details/PaymentOverview.tsx'
+import { AssignedNotice } from './invoice/AssignedNotice.tsx'
+import { InvoiceSelection } from './invoice/InvoiceSelection.tsx'
+import { PaymentOverview } from './payment/PaymentOverview.tsx'
+import { AssignmentSteps, type StepState } from './steps/AssignmentSteps.tsx'
 
 export function PaymentAssignment({ payment }: { payment: Payment }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
@@ -27,33 +31,52 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
     wasEditable.current = isEditable
   }, [isEditable])
 
+  if (assign.isSuccess) return <Navigate to={PATHS.selectPayment} state={AFTER_ASSIGNMENT} replace />
+
+  const isAssigned = payment.status === 'ASSIGNED'
+
+  const invoiceStep: StepState = isAssigned
+    ? { status: 'done', content: <AssignedNotice ref={assignedNoticeRef} /> }
+    : {
+        status: invoice ? 'done' : 'current',
+        description: <FormattedMessage id="paymentDetails.invoice.description" />,
+        content: <InvoiceSelection payment={payment} invoice={invoice} onInvoiceChange={setInvoice} />,
+      }
+  const splitStep: StepState = invoice
+    ? {
+        status: split.evaluation.validSplit ? 'done' : 'current',
+        description: <FormattedMessage id="feeSplit.description" />,
+        content: <FeeSplitter paymentAmount={payment.amount} split={split} />,
+      }
+    : { status: 'locked' }
+
   return (
     <>
-      <PaymentCard data-testid="payment-details">
-        <PaymentOverview payment={payment} />
-        {/* After a confirmation here, the result card below takes over the invoice section. */}
-        {assign.data ? null : payment.status === 'ASSIGNED' ? (
-          <AssignedNotice ref={assignedNoticeRef} />
-        ) : (
-          <InvoiceSelection payment={payment} invoice={invoice} onInvoiceChange={setInvoice} />
-        )}
-      </PaymentCard>
+      <AssignmentSteps
+        payment={{
+          status: 'done',
+          content: <PaymentOverview payment={payment} />,
+          action: (
+            <Link href={PATHS.selectPayment} className="gap-1.5 text-sm" data-testid="change-payment">
+              <ArrowLeftRight aria-hidden className="size-4" />
+              <FormattedMessage id="steps.payment.change" />
+            </Link>
+          ),
+        }}
+        invoice={invoiceStep}
+        split={isEditable ? splitStep : undefined}
+      />
 
-      {assign.data ? (
-        <AssignmentResult payment={payment} invoice={assign.variables.invoice} assignment={assign.data} />
-      ) : isEditable ? (
-        <>
-          <FeeSplitter paymentAmount={payment.amount} split={split} />
-          <ConfirmAssignmentBar
-            payment={payment}
-            invoice={invoice}
-            split={split.evaluation}
-            assign={assign}
-            isConfirming={isConfirming}
-            onConfirmingChange={setIsConfirming}
-            onInvoiceRejected={() => setInvoice(null)}
-          />
-        </>
+      {isEditable ? (
+        <ConfirmAssignment
+          payment={payment}
+          invoice={invoice}
+          split={split.evaluation}
+          assign={assign}
+          isConfirming={isConfirming}
+          onConfirmingChange={setIsConfirming}
+          onInvoiceRejected={() => setInvoice(null)}
+        />
       ) : null}
     </>
   )

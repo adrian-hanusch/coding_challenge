@@ -1,26 +1,15 @@
-import {
-  ComboBox,
-  Description,
-  FieldError,
-  Header,
-  Input,
-  Label,
-  ListBox,
-  ListBoxLoadMoreItem,
-  Spinner,
-} from '@heroui/react'
+import { ComboBox, Description, FieldError, Header, Input, Label, ListBox } from '@heroui/react'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
-import type { Invoice } from '../../../../api/types.ts'
-import { Typography } from '../../../../components/Typography.tsx'
+import { type Invoice, MAX_SEARCH_LENGTH } from '../../../../api/types.ts'
+import { SearchResults } from '../../../../components/search/SearchResults.tsx'
+import { SearchTrigger } from '../../../../components/search/SearchTrigger.tsx'
 import type { InvoiceInputError } from './invoiceInput.ts'
 import { InvoiceInputErrorMessage } from './InvoiceInputErrorMessage.tsx'
 import { InvoiceOption } from './InvoiceOption.tsx'
 import { useInvoiceNumberLookup } from './useInvoiceNumberLookup.ts'
 import { useInvoiceSearch } from './useInvoiceSearch.ts'
-
-const POPOVER_MAX_HEIGHT_PX = 320
 
 interface InvoiceSearchFieldProps {
   customerId: string | null
@@ -89,6 +78,7 @@ export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceC
       </Label>
       <ComboBox.InputGroup>
         <Input
+          maxLength={MAX_SEARCH_LENGTH}
           placeholder={intl.formatMessage({ id: 'invoiceSearch.placeholder' })}
           onBlur={() => void resolveTypedInput()}
           onKeyDown={(event) => {
@@ -96,11 +86,10 @@ export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceC
           }}
           data-testid="invoice-search-input"
         />
-        <ComboBox.Trigger>
-          {search.isSearching ? (
-            <Spinner size="sm" aria-label={intl.formatMessage({ id: 'invoiceSearch.loading' })} />
-          ) : undefined}
-        </ComboBox.Trigger>
+        <SearchTrigger
+          isSearching={search.isSearching}
+          loadingLabel={intl.formatMessage({ id: 'invoiceSearch.loading' })}
+        />
       </ComboBox.InputGroup>
       {error ? (
         <FieldError data-testid="invoice-search-error">
@@ -114,43 +103,40 @@ export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceC
           />
         </Description>
       )}
-      <ComboBox.Popover maxHeight={POPOVER_MAX_HEIGHT_PX}>
-        <ListBox
-          renderEmptyState={() => (
-            <Typography type="body-sm" color="muted" align="center" className="px-3 py-6">
-              <FormattedMessage id={search.isSearching ? 'invoiceSearch.loading' : 'invoiceSearch.empty'} />
-            </Typography>
-          )}
-        >
-          {search.fromSender.length > 0 ? (
-            <ListBox.Section id="sender">
+      <SearchResults
+        isLoadingMore={search.isLoadingMore}
+        onLoadMore={search.loadMore}
+        emptyMessage={<EmptyMessage isSearching={search.isSearching} isError={search.isError} />}
+      >
+        {search.fromSender.length > 0 ? (
+          <ListBox.Section id="sender">
+            <Header>
+              <FormattedMessage id="invoiceSearch.section.sender" values={{ sender: senderName }} />
+            </Header>
+            {search.fromSender.map((item) => (
+              <InvoiceOption key={item.id} invoice={item} />
+            ))}
+          </ListBox.Section>
+        ) : null}
+        {search.others.length > 0 ? (
+          <ListBox.Section id="others">
+            {search.fromSender.length > 0 ? (
               <Header>
-                <FormattedMessage id="invoiceSearch.section.sender" values={{ sender: senderName }} />
+                <FormattedMessage id="invoiceSearch.section.others" />
               </Header>
-              {search.fromSender.map((item) => (
-                <InvoiceOption key={item.id} invoice={item} />
-              ))}
-            </ListBox.Section>
-          ) : null}
-          {search.others.length > 0 ? (
-            <ListBox.Section id="others">
-              {search.fromSender.length > 0 ? (
-                <Header>
-                  <FormattedMessage id="invoiceSearch.section.others" />
-                </Header>
-              ) : null}
-              {search.others.map((item) => (
-                <InvoiceOption key={item.id} invoice={item} />
-              ))}
-            </ListBox.Section>
-          ) : null}
-          <ListBoxLoadMoreItem isLoading={search.isLoadingMore} onLoadMore={search.loadMore}>
-            <div className="flex justify-center py-2">
-              <Spinner size="sm" />
-            </div>
-          </ListBoxLoadMoreItem>
-        </ListBox>
-      </ComboBox.Popover>
+            ) : null}
+            {search.others.map((item) => (
+              <InvoiceOption key={item.id} invoice={item} />
+            ))}
+          </ListBox.Section>
+        ) : null}
+      </SearchResults>
     </ComboBox>
   )
+}
+
+function EmptyMessage({ isSearching, isError }: { isSearching: boolean; isError: boolean }) {
+  if (isSearching) return <FormattedMessage id="invoiceSearch.loading" />
+  if (isError) return <InvoiceInputErrorMessage error={{ code: 'searchFailed' }} />
+  return <FormattedMessage id="invoiceSearch.empty" />
 }

@@ -45,6 +45,10 @@ export const db = {
     return state.payments.find((payment) => payment.id === id)
   },
 
+  listPayments(): readonly Payment[] {
+    return state.payments
+  },
+
   findInvoice(id: string): Readonly<Invoice> | undefined {
     return state.invoices.find((invoice) => invoice.id === id)
   },

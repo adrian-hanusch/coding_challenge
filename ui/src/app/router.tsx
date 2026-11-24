@@ -2,13 +2,13 @@ import { createBrowserRouter, Navigate } from 'react-router'
 
 import { AssignPaymentPage } from '../pages/AssignPaymentPage.tsx'
 import { NotFoundPage } from '../pages/NotFoundPage.tsx'
-import { PaymentsPage } from '../pages/PaymentsPage.tsx'
+import { SelectPaymentPage } from '../pages/SelectPaymentPage.tsx'
 import { PATHS } from './paths.ts'
 import { RouteError } from './RouteError.tsx'
 import { RouterLinkProvider } from './RouterLinkProvider.tsx'
 import { AppShell } from './shell/AppShell.tsx'
 
-// Data mode (`createBrowserRouter`) is required for `useBlocker`.
+// Data mode (`createBrowserRouter`) is required for `errorElement`.
 export const router = createBrowserRouter([
   {
     element: <RouterLinkProvider />,
@@ -20,8 +20,8 @@ export const router = createBrowserRouter([
           {
             errorElement: <RouteError />,
             children: [
-              { index: true, element: <Navigate to={PATHS.payments} replace /> },
-              { path: PATHS.payments, element: <PaymentsPage /> },
+              { index: true, element: <Navigate to={PATHS.selectPayment} replace /> },
+              { path: PATHS.selectPayment, element: <SelectPaymentPage /> },
               { path: PATHS.assignPayment, element: <AssignPaymentPage /> },
               { path: '*', element: <NotFoundPage /> },
             ],

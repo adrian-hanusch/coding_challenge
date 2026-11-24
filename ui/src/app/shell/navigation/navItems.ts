@@ -8,4 +8,6 @@ export interface NavItemConfig {
   icon: LucideIcon
 }
 
-export const NAV_ITEMS: readonly NavItemConfig[] = [{ to: PATHS.payments, labelId: 'nav.payments', icon: CreditCard }]
+export const NAV_ITEMS: readonly NavItemConfig[] = [
+  { to: PATHS.selectPayment, labelId: 'nav.payments', icon: CreditCard },
+]

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Invoice } from '../api/types.ts'
-import { assignmentBlockers, splitOf, toPaymentSplits } from './assignment.ts'
+import { assignmentBlockers, toPaymentSplits } from './assignment.ts'
 import { invoiceDifference } from './invoice.ts'
-import { EMPTY_SPLIT_DRAFT, evaluateSplit, type SplitDraft } from './split.ts'
+import { evaluateSplit, INITIAL_SPLIT_DRAFT, type SplitDraft } from './split.ts'
 
 const PAYMENT = 124900
 const COMPLETE_FEES = { PLATFORM_FEE: 6245, PROVIDER_FEE: 1874, LOGISTICS_FEE: 1490 }
@@ -20,7 +20,7 @@ const INVOICE: Invoice = {
 }
 
 const evaluate = (fees: Partial<SplitDraft['fees']>, merchantOverride: SplitDraft['merchantOverride'] = null) =>
-  evaluateSplit(PAYMENT, { fees: { ...EMPTY_SPLIT_DRAFT.fees, ...fees }, merchantOverride })
+  evaluateSplit(PAYMENT, { fees: { ...INITIAL_SPLIT_DRAFT.fees, ...fees }, merchantOverride })
 
 describe('assignmentBlockers', () => {
   it('reports nothing once an invoice is selected and the split balances', () => {
@@ -28,7 +28,7 @@ describe('assignmentBlockers', () => {
   })
 
   it('reports a missing invoice and an incomplete split', () => {
-    expect(assignmentBlockers(null, evaluate({ PLATFORM_FEE: 6245 }))).toEqual(['invoiceMissing', 'splitIncomplete'])
+    expect(assignmentBlockers(null, evaluate({ PLATFORM_FEE: null }))).toEqual(['invoiceMissing', 'splitIncomplete'])
   })
 
   it('reports an unbalanced split instead of an incomplete one', () => {
@@ -44,25 +44,15 @@ describe('invoiceDifference', () => {
   })
 })
 
-describe('toPaymentSplits and splitOf', () => {
-  it('builds one split per type and reads them back', () => {
+describe('toPaymentSplits', () => {
+  it('builds one split per type', () => {
     const splits = toPaymentSplits(SPLIT, 'EUR')
 
-    expect(splits.map((split) => split.type)).toEqual([
-      'PLATFORM_FEE',
-      'PROVIDER_FEE',
-      'LOGISTICS_FEE',
-      'MERCHANT_PAYOUT',
+    expect(splits).toEqual([
+      { type: 'PLATFORM_FEE', amount: { amountMinor: 6245, currency: 'EUR' } },
+      { type: 'PROVIDER_FEE', amount: { amountMinor: 1874, currency: 'EUR' } },
+      { type: 'LOGISTICS_FEE', amount: { amountMinor: 1490, currency: 'EUR' } },
+      { type: 'MERCHANT_PAYOUT', amount: { amountMinor: 115291, currency: 'EUR' } },
     ])
-    expect(splits[0]?.amount).toEqual({ amountMinor: 6245, currency: 'EUR' })
-    expect(splitOf(splits)).toEqual(SPLIT)
-  })
-})
-
-describe('splitOf', () => {
-  it('rejects a response without one of the split types', () => {
-    const splits = toPaymentSplits(SPLIT, 'EUR').filter((split) => split.type !== 'LOGISTICS_FEE')
-
-    expect(() => splitOf(splits)).toThrow('LOGISTICS_FEE')
   })
 })
