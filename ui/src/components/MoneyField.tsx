@@ -42,6 +42,8 @@ export function MoneyField({
   return (
     <NumberField
       fullWidth
+      // Scrolling the page over a focused field must not change the amount.
+      isWheelDisabled
       minValue={0}
       maxValue={MAX_AMOUNT_MINOR / 100}
       formatOptions={formatOptions}
