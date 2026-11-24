@@ -1,11 +1,8 @@
 import { Button, Separator } from '@heroui/react'
-import { useId } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
 import { MoneyField } from '../../../components/MoneyField.tsx'
-import { PageCard } from '../../../components/PageCard.tsx'
-import { SectionHeader } from '../../../components/SectionHeader.tsx'
 import { FEE_TYPES, type SplitEvaluation, type SplitFieldError } from '../../../domain/split.ts'
 import type { AmountInput } from '../../../lib/money.ts'
 import { useFormatCents } from '../../../lib/useFormatMoney.ts'
@@ -19,51 +16,42 @@ interface FeeSplitterProps {
 
 /** Fee inputs and the merchant payout, which defaults to the payment minus all fees and can be overridden. */
 export function FeeSplitter({ paymentAmount, split }: FeeSplitterProps) {
-  const titleId = useId()
   const { draft, evaluation, touchedFees } = split
   const formatCents = useFormatCents(paymentAmount.currency)
 
   return (
-    <PageCard data-testid="fee-splitter">
-      <section aria-labelledby={titleId} className="@container flex flex-col gap-6">
-        <SectionHeader
-          id={titleId}
-          title={<FormattedMessage id="feeSplit.title" />}
-          description={<FormattedMessage id="feeSplit.description" />}
-        />
+    <div className="@container flex flex-col gap-6" data-testid="fee-splitter">
+      {/* Container query: the card is much narrower than the viewport while the sidebar is open. */}
+      <div className="grid grid-cols-1 gap-5 @xl:grid-cols-3">
+        {FEE_TYPES.map((type) => {
+          const fieldError = evaluation.fieldErrors[type]
+          const visibleError = fieldError === 'missing' && !touchedFees.has(type) ? undefined : fieldError
+          return (
+            <MoneyField
+              key={type}
+              label={<FormattedMessage id="split.type" values={{ type }} />}
+              value={draft.fees[type]}
+              onChange={(value) => {
+                split.setFee(type, value)
+              }}
+              onBlur={() => {
+                split.touchFee(type)
+              }}
+              currency={paymentAmount.currency}
+              error={visibleError ? <FieldErrorMessage error={visibleError} /> : undefined}
+              description={<FormattedMessage id="feeSplit.feeHint" values={{ zero: formatCents(0) }} />}
+              data-testid={`fee-${type}`}
+            />
+          )
+        })}
+      </div>
 
-        {/* Container query: the card is much narrower than the viewport while the sidebar is open. */}
-        <div className="grid grid-cols-1 gap-5 @xl:grid-cols-3">
-          {FEE_TYPES.map((type) => {
-            const fieldError = evaluation.fieldErrors[type]
-            const visibleError = fieldError === 'missing' && !touchedFees.has(type) ? undefined : fieldError
-            return (
-              <MoneyField
-                key={type}
-                label={<FormattedMessage id="split.type" values={{ type }} />}
-                value={draft.fees[type]}
-                onChange={(value) => {
-                  split.setFee(type, value)
-                }}
-                onBlur={() => {
-                  split.touchFee(type)
-                }}
-                currency={paymentAmount.currency}
-                error={visibleError ? <FieldErrorMessage error={visibleError} /> : undefined}
-                description={<FormattedMessage id="feeSplit.feeHint" values={{ zero: formatCents(0) }} />}
-                data-testid={`fee-${type}`}
-              />
-            )
-          })}
-        </div>
+      <Separator />
 
-        <Separator />
+      <MerchantPayoutField paymentAmount={paymentAmount} evaluation={evaluation} onChange={split.setMerchantPayout} />
 
-        <MerchantPayoutField paymentAmount={paymentAmount} evaluation={evaluation} onChange={split.setMerchantPayout} />
-
-        {evaluation.error ? <SplitErrorAlert error={evaluation.error} paymentAmount={paymentAmount} /> : null}
-      </section>
-    </PageCard>
+      {evaluation.error ? <SplitErrorAlert error={evaluation.error} paymentAmount={paymentAmount} /> : null}
+    </div>
   )
 }
 

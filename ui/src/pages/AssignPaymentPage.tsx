@@ -6,12 +6,11 @@ import { useParams } from 'react-router'
 import { ApiError } from '../api/client.ts'
 import { paymentQueryOptions } from '../api/payments.ts'
 import { Page } from '../components/Page.tsx'
-import { PaymentDetailsSkeleton } from '../features/payment-assignment/payment/PaymentDetailsSkeleton.tsx'
 import { PaymentAssignment } from '../features/payment-assignment/PaymentAssignment.tsx'
+import { PaymentAssignmentSkeleton } from '../features/payment-assignment/PaymentAssignmentSkeleton.tsx'
 import { NotFoundPage } from './NotFoundPage.tsx'
 import { StatusPage } from './StatusPage.tsx'
 
-/** Assigns one payment, loaded by id from the URL. */
 export function AssignPaymentPage() {
   const { paymentId = '' } = useParams()
   // Without the key, react-router would keep the draft when only the id changes.
@@ -40,8 +39,8 @@ function AssignPayment({ paymentId }: { paymentId: string }) {
   }
 
   return (
-    <Page title={<FormattedMessage id="assign.title" />} description={<FormattedMessage id="assign.subtitle" />}>
-      {payment ? <PaymentAssignment payment={payment} /> : <PaymentDetailsSkeleton />}
+    <Page title={<FormattedMessage id="assign.title" />}>
+      {payment ? <PaymentAssignment payment={payment} /> : <PaymentAssignmentSkeleton />}
     </Page>
   )
 }

@@ -18,7 +18,7 @@ export function StatusPage({ title, description, actions, ...rest }: StatusPageP
     <Page title={title} description={description} className="items-start gap-3" {...rest}>
       <div className="flex flex-wrap items-center gap-4">
         {actions}
-        <Link href={PATHS.payments}>
+        <Link href={PATHS.selectPayment}>
           <FormattedMessage id="nav.backToPayments" />
         </Link>
       </div>

@@ -1,7 +1,7 @@
 import { generatePath } from 'react-router'
 
 export const PATHS = {
-  payments: '/payments',
+  selectPayment: '/payments',
   assignPayment: '/payments/:paymentId/assign',
 } as const
 

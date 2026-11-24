@@ -42,7 +42,7 @@ export function AssignmentResult({ payment, invoice, assignment }: AssignmentRes
         </Alert>
       </div>
       <SplitBreakdown paymentAmount={payment.amount} split={splitOf(assignment.splits)} />
-      <Link href={PATHS.payments} className="self-start">
+      <Link href={PATHS.selectPayment} className="self-start">
         <FormattedMessage id="nav.backToPayments" />
       </Link>
     </PageCard>
