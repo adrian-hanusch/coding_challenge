@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Invoice } from '../api/types.ts'
 import { assignmentBlockers, splitOf, toPaymentSplits } from './assignment.ts'
 import { invoiceDifference } from './invoice.ts'
-import { EMPTY_SPLIT_DRAFT, evaluateSplit, type SplitDraft } from './split.ts'
+import { evaluateSplit, INITIAL_SPLIT_DRAFT, type SplitDraft } from './split.ts'
 
 const PAYMENT = 124900
 const COMPLETE_FEES = { PLATFORM_FEE: 6245, PROVIDER_FEE: 1874, LOGISTICS_FEE: 1490 }
@@ -20,7 +20,7 @@ const INVOICE: Invoice = {
 }
 
 const evaluate = (fees: Partial<SplitDraft['fees']>, merchantOverride: SplitDraft['merchantOverride'] = null) =>
-  evaluateSplit(PAYMENT, { fees: { ...EMPTY_SPLIT_DRAFT.fees, ...fees }, merchantOverride })
+  evaluateSplit(PAYMENT, { fees: { ...INITIAL_SPLIT_DRAFT.fees, ...fees }, merchantOverride })
 
 describe('assignmentBlockers', () => {
   it('reports nothing once an invoice is selected and the split balances', () => {
@@ -28,7 +28,7 @@ describe('assignmentBlockers', () => {
   })
 
   it('reports a missing invoice and an incomplete split', () => {
-    expect(assignmentBlockers(null, evaluate({ PLATFORM_FEE: 6245 }))).toEqual(['invoiceMissing', 'splitIncomplete'])
+    expect(assignmentBlockers(null, evaluate({ PLATFORM_FEE: null }))).toEqual(['invoiceMissing', 'splitIncomplete'])
   })
 
   it('reports an unbalanced split instead of an incomplete one', () => {

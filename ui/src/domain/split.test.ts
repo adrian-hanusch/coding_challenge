@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { EMPTY_SPLIT_DRAFT, evaluateSplit, type SplitDraft, withFee, withMerchantPayout } from './split.ts'
+import { evaluateSplit, INITIAL_SPLIT_DRAFT, type SplitDraft, withFee, withMerchantPayout } from './split.ts'
 
 const PAYMENT = 124900
 const TOO_PRECISE = { tooPrecise: 0.001 }
 
 function draft(fees: Partial<SplitDraft['fees']>, merchantOverride: SplitDraft['merchantOverride'] = null): SplitDraft {
-  return { fees: { ...EMPTY_SPLIT_DRAFT.fees, ...fees }, merchantOverride }
+  return { fees: { ...INITIAL_SPLIT_DRAFT.fees, ...fees }, merchantOverride }
 }
 
 const COMPLETE_FEES = { PLATFORM_FEE: 6245, PROVIDER_FEE: 1874, LOGISTICS_FEE: 1490 }
@@ -33,7 +33,7 @@ describe('evaluateSplit', () => {
   })
 
   it('reports empty fees as missing and counts them as 0', () => {
-    const result = evaluateSplit(PAYMENT, draft({ PLATFORM_FEE: 6245 }))
+    const result = evaluateSplit(PAYMENT, draft({ PLATFORM_FEE: 6245, PROVIDER_FEE: null, LOGISTICS_FEE: null }))
 
     expect(result.calculatedPayout).toBe(PAYMENT - 6245)
     expect(result.fieldErrors).toEqual({ PROVIDER_FEE: 'missing', LOGISTICS_FEE: 'missing' })
@@ -60,7 +60,7 @@ describe('evaluateSplit', () => {
   })
 
   it('reports fees that exceed the payment even while other fees are missing', () => {
-    const result = evaluateSplit(PAYMENT, draft({ PLATFORM_FEE: 130000 }))
+    const result = evaluateSplit(PAYMENT, draft({ PLATFORM_FEE: 130000, PROVIDER_FEE: null }))
 
     expect(result.error).toEqual({ code: 'feesExceedPayment', excess: 5100 })
   })
@@ -86,7 +86,7 @@ describe('evaluateSplit', () => {
   })
 
   it('does not check the sum while a field is invalid', () => {
-    expect(evaluateSplit(PAYMENT, draft({}, 115291)).error).toBeNull()
+    expect(evaluateSplit(PAYMENT, draft({ LOGISTICS_FEE: null }, 115291)).error).toBeNull()
     expect(evaluateSplit(PAYMENT, draft({ ...COMPLETE_FEES, LOGISTICS_FEE: TOO_PRECISE }, 115291)).error).toBeNull()
   })
 })
@@ -117,5 +117,11 @@ describe('withFee', () => {
     expect(after.fees).toEqual({ ...COMPLETE_FEES, PROVIDER_FEE: null })
     expect(after.merchantOverride).toBe(100000)
     expect(before.fees.PROVIDER_FEE).toBe(1874)
+  })
+})
+
+describe('INITIAL_SPLIT_DRAFT', () => {
+  it('cannot be confirmed before the fees are entered', () => {
+    expect(evaluateSplit(PAYMENT, INITIAL_SPLIT_DRAFT).validSplit).toBeNull()
   })
 })

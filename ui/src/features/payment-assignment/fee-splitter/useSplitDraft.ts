@@ -2,9 +2,9 @@ import { useState } from 'react'
 
 import type { Money } from '../../../api/types.ts'
 import {
-  EMPTY_SPLIT_DRAFT,
   evaluateSplit,
   type FeeType,
+  INITIAL_SPLIT_DRAFT,
   type SplitDraft,
   withFee,
   withMerchantPayout,
@@ -13,7 +13,7 @@ import type { AmountInput } from '../../../lib/money.ts'
 
 /** Entered split, its evaluation and which fee errors are shown. Updaters keep changes of one event from overwriting each other. */
 export function useSplitDraft(paymentAmount: Money) {
-  const [draft, setDraft] = useState<SplitDraft>(EMPTY_SPLIT_DRAFT)
+  const [draft, setDraft] = useState<SplitDraft>(INITIAL_SPLIT_DRAFT)
   const [touchedFees, setTouchedFees] = useState<ReadonlySet<FeeType>>(new Set())
 
   return {

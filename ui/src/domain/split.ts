@@ -11,7 +11,7 @@ export interface SplitDraft {
   merchantOverride: AmountInput
 }
 
-export const EMPTY_SPLIT_DRAFT: SplitDraft = {
+export const INITIAL_SPLIT_DRAFT: SplitDraft = {
   fees: { PLATFORM_FEE: null, PROVIDER_FEE: null, LOGISTICS_FEE: null },
   merchantOverride: null,
 }
