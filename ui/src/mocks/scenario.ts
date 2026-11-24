@@ -15,6 +15,7 @@ import { readJson } from './storage.ts'
 // The HTTP status, with a suffix where one status has several causes.
 const FAILURES = {
   payment: ['500'],
+  paymentSearch: ['500'],
   search: ['500'],
   assignment: ['409', '409-invoice', '500'],
 } as const

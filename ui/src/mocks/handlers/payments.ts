@@ -1,9 +1,17 @@
 import { http, HttpResponse } from 'msw'
 
-import { type FieldError, type PaymentSplit, SPLIT_TYPES, type SplitType } from '../../api/types.ts'
+import {
+  type FieldError,
+  type Page,
+  type Payment,
+  type PaymentSplit,
+  SPLIT_TYPES,
+  type SplitType,
+} from '../../api/types.ts'
 import { db } from '../db.ts'
 import { problem } from '../problem.ts'
 import { withScenario } from '../scenario.ts'
+import { pageOf, type PageQuery, parsePageQuery } from '../searchParams.ts'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -44,7 +52,44 @@ function validateSplits(raw: unknown[]): { splits: PaymentSplit[] } | { errors: 
   return errors.length > 0 ? { errors } : { splits }
 }
 
+function parseSearch(searchParams: URLSearchParams): { query: PageQuery } | { errors: FieldError[] } {
+  if (searchParams.get('status') !== 'UNMATCHED') return { errors: [{ field: 'status', code: 'INVALID_STATUS' }] }
+  return parsePageQuery(searchParams)
+}
+
+/**
+ * Matches id, sender and reference. The order is total, so pages never overlap:
+ * exact id match, then the oldest payment first, as it has waited longest.
+ */
+function searchUnmatchedPayments(payments: readonly Payment[], query: PageQuery): Page<Payment> {
+  const needle = query.q.toLowerCase()
+  const matches = payments
+    .filter((payment) => payment.status === 'UNMATCHED')
+    .filter(
+      (payment) =>
+        needle === '' ||
+        [payment.id, payment.senderName, payment.referenceNumber].some((text) => text.toLowerCase().includes(needle)),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.id.toLowerCase() === needle) - Number(a.id.toLowerCase() === needle) ||
+        a.receivedAt.localeCompare(b.receivedAt) ||
+        a.id.localeCompare(b.id),
+    )
+
+  return pageOf(matches, query)
+}
+
 export const paymentHandlers = [
+  http.get(
+    '/api/payments',
+    withScenario('paymentSearch', ({ request }) => {
+      const parsed = parseSearch(new URL(request.url).searchParams)
+      if ('errors' in parsed) return problem(400, 'INVALID_QUERY', 'Invalid search parameters', parsed.errors)
+      return HttpResponse.json(searchUnmatchedPayments(db.listPayments(), parsed.query))
+    }),
+  ),
+
   http.get(
     '/api/payments/:paymentId',
     withScenario<{ paymentId: string }>('payment', ({ params }) => {
