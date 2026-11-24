@@ -2,10 +2,10 @@ import { Link } from '@heroui/react'
 import { ArrowLeftRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
+import { Navigate } from 'react-router'
 
 import type { Invoice, Payment } from '../../api/types.ts'
-import { PATHS } from '../../app/paths.ts'
-import { AssignmentResult } from './confirmation/AssignmentResult.tsx'
+import { AFTER_ASSIGNMENT, PATHS } from '../../app/paths.ts'
 import { ConfirmAssignment } from './confirmation/ConfirmAssignment.tsx'
 import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
@@ -31,9 +31,7 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
     wasEditable.current = isEditable
   }, [isEditable])
 
-  if (assign.data) {
-    return <AssignmentResult payment={payment} invoice={assign.variables.invoice} assignment={assign.data} />
-  }
+  if (assign.isSuccess) return <Navigate to={PATHS.selectPayment} state={AFTER_ASSIGNMENT} replace />
 
   const isAssigned = payment.status === 'ASSIGNED'
 

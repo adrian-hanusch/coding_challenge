@@ -1,5 +1,5 @@
-import { type Invoice, type Money, type PaymentSplit, SPLIT_TYPES, type SplitType } from '../api/types.ts'
-import type { CompleteSplit, SplitEvaluation } from './split.ts'
+import { type Invoice, type Money, type PaymentSplit, SPLIT_TYPES } from '../api/types.ts'
+import { type CompleteSplit, type SplitEvaluation } from './split.ts'
 
 export type AssignmentBlocker = 'invoiceMissing' | 'splitIncomplete' | 'splitUnbalanced'
 
@@ -14,19 +14,4 @@ export function assignmentBlockers(invoice: Invoice | null, split: SplitEvaluati
 
 export function toPaymentSplits(split: CompleteSplit, currency: Money['currency']): PaymentSplit[] {
   return SPLIT_TYPES.map((type) => ({ type, amount: { amountMinor: split[type], currency } }))
-}
-
-/** Inverse of `toPaymentSplits`. Throws if a type is missing, so a broken response is never shown as a zero amount. */
-export function splitOf(splits: readonly PaymentSplit[]): CompleteSplit {
-  const amountOf = (type: SplitType) => {
-    const split = splits.find((candidate) => candidate.type === type)
-    if (!split) throw new Error(`Assignment response has no ${type} split`)
-    return split.amount.amountMinor
-  }
-  return {
-    PLATFORM_FEE: amountOf('PLATFORM_FEE'),
-    PROVIDER_FEE: amountOf('PROVIDER_FEE'),
-    LOGISTICS_FEE: amountOf('LOGISTICS_FEE'),
-    MERCHANT_PAYOUT: amountOf('MERCHANT_PAYOUT'),
-  }
 }
