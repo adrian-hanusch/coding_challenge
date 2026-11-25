@@ -82,13 +82,15 @@ In der Browser-Konsole setzt `__mockDb.reset()` nur die Daten zurück.
 ```
 src/
   main.tsx              Einstiegspunkt
-  index.css             Tailwind v4 + HeroUI-Styles (keine tailwind.config.js)
+  index.css             Tailwind v4, HeroUI, Schrift, Anpassungen an HeroUI-Komponenten (keine tailwind.config.js)
+  themes/petrol.css     Theme: Farben, Radien, Schatten (überschreibt HeroUI-Variablen)
   app/AppProviders.tsx  QueryClient, Sprache, Toasts, Query-Devtools (nur Dev)
   app/router.tsx        Routen (react-router, Data Mode), Pfade in app/paths.ts
   app/RouteError.tsx    Fehlerseite der Routen
   app/shell/            App Shell, eine Komponente pro Aufgabe
-    AppShell.tsx        Layout: Sidebar, Kopfzeile, Seite
-    AppHeader.tsx       Kopfzeile mit Sprachwahl (mobil zusätzlich Menü-Button und Logo)
+    AppShell.tsx        Layout: Sidebar (mobil: Kopfzeile), Seite
+    MobileHeader.tsx    Kopfzeile auf kleinen Bildschirmen: Menü-Button und Logo
+    LocaleMenu.tsx      Sprachwahl, unten in Sidebar und Drawer
     navigation/         Sidebar (Desktop), Drawer (Mobil), NavList/NavItem, navItems.ts
       navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
   pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
@@ -99,9 +101,9 @@ src/
     PaymentAssignment   Steuert den Ablauf: hält Rechnung, Aufteilung und Dialog, zeigt je Zustand die Schritte
     PaymentAssignmentSkeleton  Schritte, während die Zahlung lädt
     steps/              AssignmentSteps: Reihenfolge, Titel und Sperrhinweise der Schritte
-    payment/            Schritt 1: Zahlungsdaten (nur Anzeige, A11)
+    payment/            Schritt 1: PaymentSummary, Zahlungsdaten (nur Anzeige, A11)
       search/           Suche über nicht zugeordnete Zahlungen (ComboBox)
-    invoice/            Schritt 2: Rechnung wählen, gewählte Rechnung, Betragsabweichung (A4)
+    invoice/            Schritt 2: Rechnung wählen und ändern, InvoiceSummary, Betragsabweichung (A4)
       AssignedNotice    Ersetzt die Auswahl, wenn die Zahlung schon zugeordnet ist
       MismatchAcknowledgement  Hinweis auf die Differenz und Checkbox zur Bestätigung im Dialog
       search/           Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
@@ -129,7 +131,7 @@ src/
   app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
   components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
   lib/usePagedSearch.ts Verzögerte Suche mit Paginierung für Zahlungen und Rechnungen
-  components/           Seitenübergreifend: Page, steps/, BlockableButton, search/, Detail/DetailList, SuccessNote, PaymentStatusChip, MoneyField (Cent)
+  components/           Seitenübergreifend: Page, steps/, BlockableButton, search/, SelectionSummary (gewählte Zahlung oder Rechnung, auch im Dialog), Notice, MoneyField (Cent)
   api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
   mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
     browser.ts          Start im Browser (nur Dev)
