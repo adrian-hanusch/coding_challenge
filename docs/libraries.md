@@ -14,6 +14,7 @@ Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md
 | Paketmanager | pnpm | Wahl |
 | UI-Komponenten | HeroUI v3 | Vorgabe |
 | Styling | Tailwind CSS v4 | Voraussetzung für HeroUI v3 |
+| Schrift | IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`, selbst gehostet) | Wahl |
 | Icons | lucide-react | Wahl |
 | Server-State | TanStack Query v5 | Vorgabe |
 | Routing | react-router v8 (Data Mode) | Vorgabe |
