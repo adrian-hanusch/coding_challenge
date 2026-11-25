@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { BrandLogo } from '../Brand.tsx'
+import { LocaleMenu } from '../LocaleMenu.tsx'
 import { NavList } from './NavList.tsx'
 
 export function MobileNav() {
@@ -34,6 +35,9 @@ export function MobileNav() {
             <Drawer.Body>
               <NavList collapsed={false} onNavigate={() => setOpen(false)} />
             </Drawer.Body>
+            <Drawer.Footer>
+              <LocaleMenu />
+            </Drawer.Footer>
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>

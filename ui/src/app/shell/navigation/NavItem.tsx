@@ -3,6 +3,7 @@ import { useIntl } from 'react-intl'
 import { useMatch } from 'react-router'
 
 import type { NavItemConfig } from './navItems.ts'
+import { navRow } from './navRow.ts'
 
 interface NavItemProps {
   item: NavItemConfig
@@ -25,10 +26,10 @@ export function NavItem({ item, collapsed, onNavigate }: NavItemProps) {
         aria-label={collapsed ? label : undefined}
         data-testid={`nav-${item.to}`}
         className={cn(
-          'flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground no-underline',
+          navRow(collapsed),
+          'flex items-center text-foreground no-underline',
           'transition-colors hover:bg-default hover:no-underline',
           isActive && 'bg-accent-soft text-accent-soft-foreground hover:bg-accent-soft-hover',
-          collapsed && 'justify-center px-0',
         )}
       >
         <Icon className="size-4 shrink-0" aria-hidden />
