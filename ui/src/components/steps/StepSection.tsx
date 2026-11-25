@@ -11,7 +11,7 @@ interface StepSectionProps {
   title: ReactNode
   description?: ReactNode
   action?: ReactNode
-  children: ReactNode
+  children?: ReactNode
   'data-testid'?: string
 }
 
@@ -28,8 +28,11 @@ export function StepSection({
 
   return (
     <li aria-current={status === 'current' ? 'step' : undefined} data-step-status={status} data-testid={testId}>
-      <Card className={cn('p-6 sm:p-8', status === 'current' && 'ring-2 ring-accent')}>
-        <section aria-labelledby={titleId} className="flex flex-col gap-6">
+      <Card
+        variant={status === 'locked' ? 'secondary' : 'default'}
+        className={cn('p-5 sm:p-6', status === 'current' && 'ring-2 ring-accent')}
+      >
+        <section aria-labelledby={titleId} className="flex flex-col gap-5">
           <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
             <StepMarker step={step} status={status} />
             <div className="flex min-w-48 flex-1 flex-col gap-1">
@@ -41,14 +44,14 @@ export function StepSection({
                 </span>
               </Typography>
               {description ? (
-                <Typography type="body-sm" color="muted">
+                <Typography type="body-sm" color="muted" elementType="div">
                   {description}
                 </Typography>
               ) : null}
             </div>
-            {action ? <div className="shrink-0">{action}</div> : null}
+            {action ? <div className="shrink-0 max-sm:w-full max-sm:ps-10">{action}</div> : null}
           </div>
-          {children}
+          {children ? <div className="sm:ps-10">{children}</div> : null}
         </section>
       </Card>
     </li>

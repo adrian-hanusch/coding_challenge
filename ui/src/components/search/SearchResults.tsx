@@ -1,7 +1,5 @@
-import { ComboBox, ListBox, ListBoxLoadMoreItem, Spinner } from '@heroui/react'
+import { ComboBox, EmptyState, ListBox, ListBoxLoadMoreItem, Spinner } from '@heroui/react'
 import type { ReactNode } from 'react'
-
-import { Typography } from '../Typography.tsx'
 
 const POPOVER_MAX_HEIGHT_PX = 320
 
@@ -15,13 +13,7 @@ interface SearchResultsProps {
 export function SearchResults({ isLoadingMore, onLoadMore, emptyMessage, children }: SearchResultsProps) {
   return (
     <ComboBox.Popover maxHeight={POPOVER_MAX_HEIGHT_PX}>
-      <ListBox
-        renderEmptyState={() => (
-          <Typography type="body-sm" color="muted" align="center" className="px-3 py-6">
-            {emptyMessage}
-          </Typography>
-        )}
-      >
+      <ListBox renderEmptyState={() => <EmptyState className="px-3 py-6 text-center">{emptyMessage}</EmptyState>}>
         {children}
         <ListBoxLoadMoreItem isLoading={isLoadingMore} onLoadMore={onLoadMore}>
           <div className="flex justify-center py-2">

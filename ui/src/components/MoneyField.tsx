@@ -13,6 +13,7 @@ interface MoneyFieldProps {
   description?: ReactNode
   error?: ReactNode
   onBlur?: () => void
+  'aria-describedby'?: string
   'data-testid'?: string
 }
 
@@ -29,6 +30,7 @@ export function MoneyField({
   description,
   error,
   onBlur,
+  'aria-describedby': describedBy,
   'data-testid': testId,
 }: MoneyFieldProps) {
   const intl = useIntl()
@@ -53,10 +55,11 @@ export function MoneyField({
       }}
       onBlur={onBlur}
       isInvalid={error != null}
+      aria-describedby={describedBy}
       data-testid={testId}
     >
       <Label>{label}</Label>
-      <InputGroup fullWidth variant="secondary">
+      <InputGroup fullWidth>
         {/* min-w-0: otherwise the input keeps its default width of 20 characters and pushes the suffix out of narrow fields. */}
         <InputGroup.Input
           className="min-w-0 tabular-nums"

@@ -1,8 +1,9 @@
-import { cn, Separator } from '@heroui/react'
+import { Separator } from '@heroui/react'
 import type { ReactNode } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
+import { Typography } from '../../../components/Typography.tsx'
 import { type CompleteSplit, FEE_TYPES } from '../../../domain/split.ts'
 import { useFormatCents } from '../../../lib/useFormatMoney.ts'
 
@@ -50,10 +51,15 @@ interface RowProps {
 }
 
 function Row({ label, children, emphasized = false, 'data-testid': testId }: RowProps) {
+  const type = emphasized ? 'h6' : 'body-sm'
   return (
-    <div className={cn('flex items-baseline gap-4', emphasized && 'font-semibold')} data-testid={testId}>
-      <dt className="min-w-0 flex-1">{label}</dt>
-      <dd className="text-right tabular-nums">{children}</dd>
+    <div className="flex items-baseline gap-4" data-testid={testId}>
+      <Typography type={type} elementType="dt" className="min-w-0 flex-1">
+        {label}
+      </Typography>
+      <Typography type={type} elementType="dd" align="end" className="tabular-nums">
+        {children}
+      </Typography>
     </div>
   )
 }

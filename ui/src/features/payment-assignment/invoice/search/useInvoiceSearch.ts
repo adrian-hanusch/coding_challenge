@@ -8,13 +8,10 @@ import { usePagedSearch } from '../../../../lib/usePagedSearch.ts'
 interface UseInvoiceSearchParams {
   query: string
   customerId: string | null
-  enabled: boolean
 }
 
-export function useInvoiceSearch({ query, customerId, enabled }: UseInvoiceSearchParams) {
-  const { items: invoices, ...search } = usePagedSearch(query, (q) => invoiceSearchOptions({ q, customerId }), {
-    enabled,
-  })
+export function useInvoiceSearch({ query, customerId }: UseInvoiceSearchParams) {
+  const { items: invoices, ...search } = usePagedSearch(query, (q) => invoiceSearchOptions({ q, customerId }))
   const groups = useMemo(() => groupInvoices(invoices, customerId), [invoices, customerId])
 
   return { ...search, ...groups, invoices }

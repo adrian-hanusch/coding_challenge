@@ -1,3 +1,69 @@
 /* Tailwind v4 is configured in CSS, there is no tailwind.config.js. HeroUI must come after Tailwind. */
 @import 'tailwindcss';
 @import '@heroui/styles';
+@import './themes/petrol.css' layer(theme);
+@import '@fontsource-variable/ibm-plex-sans/wght.css';
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer components {
+  /* Their HeroUI radius step does not match the 8px of the fields. */
+  .button,
+  .alert,
+  .skeleton {
+    border-radius: var(--field-radius);
+  }
+
+  .typography--body-sm {
+    line-height: 1.25rem;
+  }
+
+  .typography--body-xs {
+    line-height: 1rem;
+  }
+
+  .input-group__suffix {
+    border-width: 0;
+  }
+
+  .tooltip {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .modal__heading,
+  .drawer__heading {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  .modal__header + .modal__body {
+    @apply mt-4 text-foreground;
+  }
+
+  /* Keeps the scrollbar off the content. */
+  .modal__body--scroll-inside {
+    @apply -me-3 pe-3;
+  }
+
+  .alert {
+    @apply gap-3;
+  }
+
+  .alert--accent {
+    @apply bg-accent-soft;
+  }
+
+  .alert--success {
+    @apply bg-success-soft;
+  }
+
+  .alert--warning {
+    @apply bg-warning-soft;
+  }
+
+  .alert--danger {
+    @apply bg-danger-soft;
+  }
+}

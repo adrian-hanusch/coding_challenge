@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { StepSection } from '../../../components/steps/StepSection.tsx'
-import { Typography } from '../../../components/Typography.tsx'
 
 interface OpenStep {
   status: 'done' | 'current'
@@ -22,11 +21,12 @@ export type StepState = OpenStep | LockedStep
 interface AssignmentStepsProps {
   payment: OpenStep
   invoice: StepState
-  /** Hidden when omitted. */
-  split?: StepState
+  split: StepState
+  /** For an assigned payment: nothing left to choose, so the split is hidden. */
+  isReadOnly?: boolean
 }
 
-export function AssignmentSteps({ payment, invoice, split }: AssignmentStepsProps) {
+export function AssignmentSteps({ payment, invoice, split, isReadOnly = false }: AssignmentStepsProps) {
   const intl = useIntl()
 
   return (
@@ -34,7 +34,7 @@ export function AssignmentSteps({ payment, invoice, split }: AssignmentStepsProp
       <StepSection
         step={1}
         status={payment.status}
-        title={<FormattedMessage id="steps.payment.title" />}
+        title={<FormattedMessage id={isReadOnly ? 'steps.payment.titleReadOnly' : 'steps.payment.title'} />}
         description={payment.description}
         action={payment.action}
         data-testid="step-payment"
@@ -44,11 +44,11 @@ export function AssignmentSteps({ payment, invoice, split }: AssignmentStepsProp
       <LockableStep
         step={2}
         state={invoice}
-        title={<FormattedMessage id="paymentDetails.invoice.title" />}
+        title={<FormattedMessage id={isReadOnly ? 'steps.invoice.titleReadOnly' : 'steps.invoice.title'} />}
         lockedHint={<FormattedMessage id="steps.invoice.locked" />}
         data-testid="step-invoice"
       />
-      {split ? (
+      {isReadOnly ? null : (
         <LockableStep
           step={3}
           state={split}
@@ -56,7 +56,7 @@ export function AssignmentSteps({ payment, invoice, split }: AssignmentStepsProp
           lockedHint={<FormattedMessage id="steps.split.locked" />}
           data-testid="step-split"
         />
-      ) : null}
+      )}
     </ol>
   )
 }
@@ -72,11 +72,11 @@ interface LockableStepProps {
 function LockableStep({ state, lockedHint, ...section }: LockableStepProps) {
   if (state.status === 'locked') {
     return (
-      <StepSection {...section} status="locked">
-        <Typography type="body-sm" color="muted" data-testid="step-locked-hint">
-          {state.hint ?? lockedHint}
-        </Typography>
-      </StepSection>
+      <StepSection
+        {...section}
+        status="locked"
+        description={<div data-testid="step-locked-hint">{state.hint ?? lockedHint}</div>}
+      />
     )
   }
   const { content, ...open } = state

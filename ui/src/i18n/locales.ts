@@ -4,6 +4,9 @@ import en from './messages/en.json'
 export const SUPPORTED_LOCALES = ['en', 'de'] as const
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
 
+/** In their own language, so users find theirs whatever the current one is. */
+export const LOCALE_NAMES: Record<Locale, string> = { en: 'English', de: 'Deutsch' }
+
 export const DEFAULT_LOCALE: Locale = 'en'
 
 // Types every message id and locale passed to react-intl (`<FormattedMessage id>`, `formatMessage`, `IntlProvider`).

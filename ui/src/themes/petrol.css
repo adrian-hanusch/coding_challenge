@@ -1,0 +1,50 @@
+@layer base {
+  :root {
+    /* HeroUI derives its radius steps from this: 12px for panels, 8px for list entries and chips. */
+    --radius: 0.25rem;
+    --field-radius: 0.5rem;
+    --field-border-width: 1px;
+  }
+
+  /* Colors are not on :root, where they would also override a dark theme. */
+  .light,
+  [data-theme='light'] {
+    --background: #f3f6f6;
+    --foreground: #14282b;
+    --surface-secondary: #eaf0f0;
+    --surface-tertiary: #d5e0e1;
+    --muted: #52676a;
+    --border: #cbd7d8;
+    --separator: #dbe4e4;
+    --default: #d5e0e1;
+    --default-foreground: var(--foreground);
+
+    --accent: #0b5c63;
+    --accent-foreground: #ffffff;
+    --accent-hover: #084a50;
+    --accent-soft: #ddeff0;
+    --accent-soft-foreground: var(--accent);
+    --accent-soft-hover: #cde5e7;
+
+    --success: #1f7a4a;
+    --success-foreground: #ffffff;
+    --success-soft: #e4f4ea;
+    --success-soft-foreground: var(--success);
+
+    --warning: #8a5200;
+    --warning-foreground: #ffffff;
+    --warning-soft: #fff1d6;
+    --warning-soft-foreground: var(--warning);
+
+    --danger: #b3261e;
+    --danger-foreground: #ffffff;
+    --danger-soft: #fde8e6;
+    --danger-soft-foreground: var(--danger);
+
+    --field-foreground: var(--foreground);
+    --field-border: #7f9497;
+
+    --field-shadow: 0 0 #0000;
+    --surface-shadow: 0 0 #0000;
+  }
+}

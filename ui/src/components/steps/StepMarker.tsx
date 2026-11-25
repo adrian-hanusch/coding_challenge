@@ -8,10 +8,10 @@ export function StepMarker({ step, status }: { step: number; status: StepStatus 
     <span
       aria-hidden
       className={cn(
-        'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium tabular-nums',
-        status === 'done' && 'bg-success-soft text-success-soft-foreground',
+        'flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium tabular-nums',
+        status === 'done' && 'bg-accent-soft text-accent-soft-foreground',
         status === 'current' && 'bg-accent text-accent-foreground',
-        status === 'locked' && 'border border-border text-muted',
+        status === 'locked' && 'bg-default text-muted',
       )}
     >
       {status === 'done' ? <Check className="size-4" /> : step}

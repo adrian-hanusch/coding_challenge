@@ -1,5 +1,5 @@
 import { ComboBox, Description, FieldError, Header, Input, Label, ListBox } from '@heroui/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { type Invoice, MAX_SEARCH_LENGTH } from '../../../../api/types.ts'
@@ -11,45 +11,41 @@ import { InvoiceOption } from './InvoiceOption.tsx'
 import { useInvoiceNumberLookup } from './useInvoiceNumberLookup.ts'
 import { useInvoiceSearch } from './useInvoiceSearch.ts'
 
+export interface InvoiceSearchStart {
+  text: string
+  autoFocus: boolean
+}
+
 interface InvoiceSearchFieldProps {
   customerId: string | null
   senderName: string
-  invoice: Invoice | null
-  onInvoiceChange: (invoice: Invoice | null) => void
+  start: InvoiceSearchStart
+  /** `wasFocused` is false when the user had already moved on, i.e. for a lookup on blur. */
+  onSelect: (invoice: Invoice, wasFocused: boolean) => void
 }
 
 /** Invoice autocomplete with server-side search. A typed number is resolved on blur or Enter. */
-export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceChange }: InvoiceSearchFieldProps) {
+export function InvoiceSearchField({ customerId, senderName, start, onSelect }: InvoiceSearchFieldProps) {
   const intl = useIntl()
-  const [draft, setDraft] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [text, setText] = useState(start.text)
   const [inputError, setInputError] = useState<InvoiceInputError | null>(null)
 
-  const inputValue = invoice?.invoiceNumber ?? draft
-  const query = inputValue.trim()
-  const search = useInvoiceSearch({ query, customerId, enabled: invoice === null })
-  const { track, lookup } = useInvoiceNumberLookup(customerId)
+  const query = text.trim()
+  const search = useInvoiceSearch({ query, customerId })
+  const { track, lookup } = useInvoiceNumberLookup(customerId, start.text)
 
-  function setText(text: string) {
-    track(text)
-    setDraft(text)
+  function changeText(next: string) {
+    track(next)
+    setText(next)
     setInputError(null)
   }
 
-  function select(next: Invoice) {
-    setText(next.invoiceNumber)
-    onInvoiceChange(next)
-  }
-
-  function changeText(text: string) {
-    setText(text)
-    if (invoice && text !== invoice.invoiceNumber) onInvoiceChange(null)
-  }
-
   async function resolveTypedInput() {
-    if (invoice || query === '') return
+    if (query === '') return
     const resolution = await lookup(query)
     if (!resolution) return
-    if ('invoice' in resolution) select(resolution.invoice)
+    if ('invoice' in resolution) onSelect(resolution.invoice, document.activeElement === inputRef.current)
     else setInputError(resolution.error)
   }
 
@@ -58,18 +54,17 @@ export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceC
   return (
     <ComboBox<Invoice>
       fullWidth
-      variant="secondary"
+      menuTrigger="focus"
       allowsCustomValue
       allowsEmptyCollection
       isInvalid={error !== null}
       items={search.invoices}
       disabledKeys={search.disabledKeys}
-      inputValue={inputValue}
+      inputValue={text}
       onInputChange={changeText}
-      value={invoice?.id ?? null}
       onChange={(key) => {
         const next = search.invoices.find((item) => item.id === key)
-        if (next) select(next)
+        if (next) onSelect(next, true)
       }}
       data-testid="invoice-search"
     >
@@ -78,6 +73,8 @@ export function InvoiceSearchField({ customerId, senderName, invoice, onInvoiceC
       </Label>
       <ComboBox.InputGroup>
         <Input
+          ref={inputRef}
+          autoFocus={start.autoFocus}
           maxLength={MAX_SEARCH_LENGTH}
           placeholder={intl.formatMessage({ id: 'invoiceSearch.placeholder' })}
           onBlur={() => void resolveTypedInput()}

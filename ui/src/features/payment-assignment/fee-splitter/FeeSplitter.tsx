@@ -1,23 +1,23 @@
-import { Button, Separator } from '@heroui/react'
+import { Button, Surface } from '@heroui/react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
 import { MoneyField } from '../../../components/MoneyField.tsx'
 import { FEE_TYPES, type SplitEvaluation, type SplitFieldError } from '../../../domain/split.ts'
 import type { AmountInput } from '../../../lib/money.ts'
-import { useFormatCents } from '../../../lib/useFormatMoney.ts'
 import { SplitErrorAlert } from './SplitErrorAlert.tsx'
 import type { SplitDraftState } from './useSplitDraft.ts'
 
 interface FeeSplitterProps {
   paymentAmount: Money
   split: SplitDraftState
+  /** Element that says what to enter if there is no fee. */
+  zeroHintId: string
 }
 
 /** Fee inputs and the merchant payout, which defaults to the payment minus all fees and can be overridden. */
-export function FeeSplitter({ paymentAmount, split }: FeeSplitterProps) {
+export function FeeSplitter({ paymentAmount, split, zeroHintId }: FeeSplitterProps) {
   const { draft, evaluation, touchedFees } = split
-  const formatCents = useFormatCents(paymentAmount.currency)
 
   return (
     <div className="@container flex flex-col gap-6" data-testid="fee-splitter">
@@ -39,14 +39,12 @@ export function FeeSplitter({ paymentAmount, split }: FeeSplitterProps) {
               }}
               currency={paymentAmount.currency}
               error={visibleError ? <FieldErrorMessage error={visibleError} /> : undefined}
-              description={<FormattedMessage id="feeSplit.feeHint" values={{ zero: formatCents(0) }} />}
+              aria-describedby={zeroHintId}
               data-testid={`fee-${type}`}
             />
           )
         })}
       </div>
-
-      <Separator />
 
       <MerchantPayoutField paymentAmount={paymentAmount} evaluation={evaluation} onChange={split.setMerchantPayout} />
 
@@ -74,7 +72,7 @@ function MerchantPayoutField({ paymentAmount, evaluation, onChange }: MerchantPa
   const fieldError = evaluation.fieldErrors.MERCHANT_PAYOUT
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+    <Surface variant="secondary" className="flex flex-col gap-3 rounded-field p-4 sm:flex-row sm:items-start sm:gap-4">
       <div className="sm:flex-1">
         <MoneyField
           label={<FormattedMessage id="split.type" values={{ type: 'MERCHANT_PAYOUT' }} />}
@@ -88,8 +86,7 @@ function MerchantPayoutField({ paymentAmount, evaluation, onChange }: MerchantPa
       </div>
       {evaluation.isOverridden ? (
         <Button
-          variant="tertiary"
-          size="sm"
+          variant="secondary"
           className="self-start sm:mt-6"
           onPress={() => {
             onChange(null)
@@ -99,6 +96,6 @@ function MerchantPayoutField({ paymentAmount, evaluation, onChange }: MerchantPa
           <FormattedMessage id="feeSplit.payout.useCalculated" />
         </Button>
       ) : null}
-    </div>
+    </Surface>
   )
 }

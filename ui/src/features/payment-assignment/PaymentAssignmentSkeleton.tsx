@@ -1,6 +1,9 @@
 import { Skeleton } from '@heroui/react'
 
+import { SelectionSummary } from '../../components/SelectionSummary.tsx'
 import { AssignmentSteps } from './steps/AssignmentSteps.tsx'
+
+const LABEL = <Skeleton className="h-5 w-20" />
 
 export function PaymentAssignmentSkeleton() {
   return (
@@ -9,23 +12,15 @@ export function PaymentAssignmentSkeleton() {
         payment={{
           status: 'current',
           content: (
-            <div className="flex flex-col gap-8">
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-4 w-28 rounded-md" />
-                <Skeleton className="h-10 w-48 rounded-lg" />
-              </div>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                {[0, 1, 2].map((index) => (
-                  <div key={index} className="flex flex-col gap-2">
-                    <Skeleton className="h-4 w-20 rounded-md" />
-                    <Skeleton className="h-5 w-36 rounded-md" />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SelectionSummary
+              title={{ label: LABEL, value: <Skeleton className="h-6 w-32" /> }}
+              amount={{ label: LABEL, value: <Skeleton className="h-8 w-28" /> }}
+              reference={{ label: LABEL, value: <Skeleton className="h-5 w-24" /> }}
+              date={{ label: LABEL, value: <Skeleton className="h-5 w-28" /> }}
+            />
           ),
         }}
-        invoice={{ status: 'locked', hint: <Skeleton className="h-4 w-56 rounded-md" /> }}
+        invoice={{ status: 'locked', hint: <Skeleton className="h-4 w-56" /> }}
         split={{ status: 'locked' }}
       />
     </div>

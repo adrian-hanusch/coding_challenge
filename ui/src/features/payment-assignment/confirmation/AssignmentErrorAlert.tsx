@@ -1,12 +1,19 @@
-import { Alert, Button } from '@heroui/react'
-import type { ReactNode } from 'react'
+import { Button } from '@heroui/react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+import { Notice } from '../../../components/Notice.tsx'
 import { failureOf } from './assignmentFailure.ts'
 
 /** Must render inside the confirmation dialog: its button closes it through `slot="close"`. */
 export function AssignmentErrorAlert({ error }: { error: Error }) {
   const failure = failureOf(error)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // An error that cannot be retried disables the focused submit button; without focus in the dialog, Escape is ignored.
+  useEffect(() => {
+    ref.current?.focus()
+  }, [error])
 
   let title: ReactNode
   let description: ReactNode
@@ -38,18 +45,20 @@ export function AssignmentErrorAlert({ error }: { error: Error }) {
   }
 
   return (
-    <Alert status="danger" role="alert" data-testid="assignment-error">
-      <Alert.Indicator />
-      <Alert.Content>
-        <Alert.Title>{title}</Alert.Title>
-        <Alert.Description>{description}</Alert.Description>
-        {failure === 'alreadyAssigned' ? (
-          // The payment is already refetched as ASSIGNED; closing the dialog lets that state replace the form.
-          <Button size="sm" variant="secondary" className="mt-2 self-start" slot="close">
-            <FormattedMessage id="assignment.error.showCurrentState" />
-          </Button>
-        ) : null}
-      </Alert.Content>
-    </Alert>
+    <Notice
+      ref={ref}
+      status="danger"
+      role="alert"
+      title={title}
+      description={description}
+      data-testid="assignment-error"
+    >
+      {failure === 'alreadyAssigned' ? (
+        // The payment is already refetched as ASSIGNED; closing the dialog lets that state replace the form.
+        <Button size="sm" variant="secondary" className="mt-2 self-start" slot="close">
+          <FormattedMessage id="assignment.error.showCurrentState" />
+        </Button>
+      ) : null}
+    </Notice>
   )
 }

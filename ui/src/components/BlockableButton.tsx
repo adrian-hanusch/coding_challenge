@@ -38,9 +38,7 @@ export function BlockableButton({
       >
         {children}
       </Button>
-      <Tooltip.Content placement="top end" className="max-w-xs">
-        {blockedReason}
-      </Tooltip.Content>
+      <Tooltip.Content placement="top end">{blockedReason}</Tooltip.Content>
     </Tooltip>
   )
 }

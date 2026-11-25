@@ -1,8 +1,8 @@
-import { Alert } from '@heroui/react'
 import type { ReactNode } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
+import { Notice } from '../../../components/Notice.tsx'
 import type { SplitError } from '../../../domain/split.ts'
 import { useFormatCents } from '../../../lib/useFormatMoney.ts'
 
@@ -33,13 +33,5 @@ export function SplitErrorAlert({ error, paymentAmount }: { error: SplitError; p
       break
   }
 
-  return (
-    <Alert status="danger" role="alert" data-testid="split-error">
-      <Alert.Indicator />
-      <Alert.Content>
-        <Alert.Title>{title}</Alert.Title>
-        <Alert.Description>{description}</Alert.Description>
-      </Alert.Content>
-    </Alert>
-  )
+  return <Notice status="danger" role="alert" title={title} description={description} data-testid="split-error" />
 }

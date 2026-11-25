@@ -9,3 +9,6 @@ export const assignPaymentPath = (paymentId: string) => generatePath(PATHS.assig
 
 /** Navigation state of the redirect to the payment selection after an assignment. */
 export const AFTER_ASSIGNMENT = 'afterAssignment'
+
+/** Navigation state when the payment selection is opened to replace the chosen payment. */
+export const CHANGE_PAYMENT = 'changePayment'

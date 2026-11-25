@@ -5,7 +5,7 @@ import { assignPaymentPath } from '../../app/paths.ts'
 import { PaymentSearchField } from './payment/search/PaymentSearchField.tsx'
 import { AssignmentSteps } from './steps/AssignmentSteps.tsx'
 
-export function PaymentSelection() {
+export function PaymentSelection({ autoFocusSearch }: { autoFocusSearch: boolean }) {
   const navigate = useNavigate()
 
   return (
@@ -13,7 +13,12 @@ export function PaymentSelection() {
       payment={{
         status: 'current',
         description: <FormattedMessage id="steps.payment.description" />,
-        content: <PaymentSearchField onSelect={(paymentId) => void navigate(assignPaymentPath(paymentId))} />,
+        content: (
+          <PaymentSearchField
+            autoFocus={autoFocusSearch}
+            onSelect={(paymentId) => void navigate(assignPaymentPath(paymentId))}
+          />
+        ),
       }}
       invoice={{ status: 'locked' }}
       split={{ status: 'locked' }}

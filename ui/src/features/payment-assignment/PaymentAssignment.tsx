@@ -1,22 +1,33 @@
-import { Link } from '@heroui/react'
-import { ArrowLeftRight } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Button } from '@heroui/react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
-import { Navigate } from 'react-router'
+import { Navigate, useNavigate } from 'react-router'
 
 import type { Invoice, Payment } from '../../api/types.ts'
-import { AFTER_ASSIGNMENT, PATHS } from '../../app/paths.ts'
+import { AFTER_ASSIGNMENT, CHANGE_PAYMENT, PATHS } from '../../app/paths.ts'
+import { Page } from '../../components/Page.tsx'
 import { ConfirmAssignment } from './confirmation/ConfirmAssignment.tsx'
 import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
 import { useSplitDraft } from './fee-splitter/useSplitDraft.ts'
 import { AssignedNotice } from './invoice/AssignedNotice.tsx'
 import { InvoiceSelection } from './invoice/InvoiceSelection.tsx'
-import { PaymentOverview } from './payment/PaymentOverview.tsx'
+import type { InvoiceSearchStart } from './invoice/search/InvoiceSearchField.tsx'
+import { PaymentSummary } from './payment/PaymentSummary.tsx'
 import { AssignmentSteps, type StepState } from './steps/AssignmentSteps.tsx'
 
+interface InvoiceChoice {
+  invoice: Invoice | null
+  /** How the search field starts while no invoice is chosen. */
+  search: InvoiceSearchStart
+}
+
+const EMPTY_SEARCH: InvoiceSearchStart = { text: '', autoFocus: false }
+
 export function PaymentAssignment({ payment }: { payment: Payment }) {
-  const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const navigate = useNavigate()
+  const zeroHintId = useId()
+  const [{ invoice, search }, setInvoiceChoice] = useState<InvoiceChoice>({ invoice: null, search: EMPTY_SEARCH })
   const [isConfirming, setIsConfirming] = useState(false)
   const split = useSplitDraft(payment.amount)
   const assign = useAssignPayment(payment)
@@ -39,32 +50,65 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
     ? { status: 'done', content: <AssignedNotice ref={assignedNoticeRef} /> }
     : {
         status: invoice ? 'done' : 'current',
-        description: <FormattedMessage id="paymentDetails.invoice.description" />,
-        content: <InvoiceSelection payment={payment} invoice={invoice} onInvoiceChange={setInvoice} />,
+        description: invoice ? undefined : <FormattedMessage id="paymentDetails.invoice.description" />,
+        content: (
+          <InvoiceSelection
+            payment={payment}
+            invoice={invoice}
+            search={search}
+            onSelect={(next) => {
+              setInvoiceChoice({ invoice: next, search: EMPTY_SEARCH })
+            }}
+          />
+        ),
+        action: invoice ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() => {
+              setInvoiceChoice({ invoice: null, search: { text: '', autoFocus: true } })
+            }}
+            data-testid="change-invoice"
+          >
+            <FormattedMessage id="steps.invoice.change" />
+          </Button>
+        ) : undefined,
       }
   const splitStep: StepState = invoice
     ? {
         status: split.evaluation.validSplit ? 'done' : 'current',
-        description: <FormattedMessage id="feeSplit.description" />,
-        content: <FeeSplitter paymentAmount={payment.amount} split={split} />,
+        description: (
+          <>
+            <FormattedMessage id="feeSplit.description" />{' '}
+            <span id={zeroHintId}>
+              <FormattedMessage id="feeSplit.zeroHint" />
+            </span>
+          </>
+        ),
+        content: <FeeSplitter paymentAmount={payment.amount} split={split} zeroHintId={zeroHintId} />,
       }
     : { status: 'locked' }
 
   return (
-    <>
+    <Page title={<FormattedMessage id={isEditable ? 'assign.title' : 'assign.assignedTitle'} />}>
       <AssignmentSteps
         payment={{
           status: 'done',
-          content: <PaymentOverview payment={payment} />,
+          content: <PaymentSummary payment={payment} />,
           action: (
-            <Link href={PATHS.selectPayment} className="gap-1.5 text-sm" data-testid="change-payment">
-              <ArrowLeftRight aria-hidden className="size-4" />
-              <FormattedMessage id="steps.payment.change" />
-            </Link>
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => void navigate(PATHS.selectPayment, { state: CHANGE_PAYMENT })}
+              data-testid="change-payment"
+            >
+              <FormattedMessage id={isEditable ? 'steps.payment.change' : 'steps.payment.chooseOther'} />
+            </Button>
           ),
         }}
         invoice={invoiceStep}
-        split={isEditable ? splitStep : undefined}
+        isReadOnly={!isEditable}
+        split={splitStep}
       />
 
       {isEditable ? (
@@ -75,9 +119,12 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
           assign={assign}
           isConfirming={isConfirming}
           onConfirmingChange={setIsConfirming}
-          onInvoiceRejected={() => setInvoice(null)}
+          onInvoiceRejected={() => {
+            // Keeps the number visible, so the user knows which invoice was rejected.
+            setInvoiceChoice({ invoice: null, search: { text: invoice?.invoiceNumber ?? '', autoFocus: false } })
+          }}
         />
       ) : null}
-    </>
+    </Page>
   )
 }

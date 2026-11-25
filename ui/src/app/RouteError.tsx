@@ -25,7 +25,7 @@ export function RouteError() {
         )
       }
       actions={
-        <Button variant="secondary" onPress={() => window.location.reload()}>
+        <Button onPress={() => window.location.reload()}>
           <FormattedMessage id="error.reload" />
         </Button>
       }
