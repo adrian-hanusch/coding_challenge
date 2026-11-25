@@ -30,7 +30,7 @@ function AssignPayment({ paymentId }: { paymentId: string }) {
         title={<FormattedMessage id="assign.loadError.title" />}
         description={<FormattedMessage id="assign.loadError.description" />}
         actions={
-          <Button variant="secondary" onPress={() => void refetch()}>
+          <Button onPress={() => void refetch()}>
             <FormattedMessage id="assign.loadError.retry" />
           </Button>
         }
@@ -38,9 +38,11 @@ function AssignPayment({ paymentId }: { paymentId: string }) {
     )
   }
 
+  if (payment) return <PaymentAssignment payment={payment} />
+
   return (
     <Page title={<FormattedMessage id="assign.title" />}>
-      {payment ? <PaymentAssignment payment={payment} /> : <PaymentAssignmentSkeleton />}
+      <PaymentAssignmentSkeleton />
     </Page>
   )
 }

@@ -10,10 +10,11 @@ import { usePagedSearch } from '../../../../lib/usePagedSearch.ts'
 import { PaymentOption } from './PaymentOption.tsx'
 
 interface PaymentSearchFieldProps {
+  autoFocus: boolean
   onSelect: (paymentId: string) => void
 }
 
-export function PaymentSearchField({ onSelect }: PaymentSearchFieldProps) {
+export function PaymentSearchField({ autoFocus, onSelect }: PaymentSearchFieldProps) {
   const intl = useIntl()
   const [text, setText] = useState('')
   const query = text.trim()
@@ -22,7 +23,6 @@ export function PaymentSearchField({ onSelect }: PaymentSearchFieldProps) {
   return (
     <ComboBox<Payment>
       fullWidth
-      variant="secondary"
       menuTrigger="focus"
       allowsEmptyCollection
       isInvalid={search.isError}
@@ -39,6 +39,7 @@ export function PaymentSearchField({ onSelect }: PaymentSearchFieldProps) {
       </Label>
       <ComboBox.InputGroup>
         <Input
+          autoFocus={autoFocus}
           maxLength={MAX_SEARCH_LENGTH}
           placeholder={intl.formatMessage({ id: 'paymentSearch.placeholder' })}
           data-testid="payment-search-input"
@@ -52,7 +53,7 @@ export function PaymentSearchField({ onSelect }: PaymentSearchFieldProps) {
         <FieldError data-testid="payment-search-error" className="flex flex-wrap items-center gap-x-2">
           <FormattedMessage id="paymentSearch.error" />
           {/* Without the null slot it would become a second trigger button of the ComboBox. */}
-          <Button slot={null} variant="tertiary" size="sm" onPress={search.retry} data-testid="payment-search-retry">
+          <Button slot={null} variant="secondary" size="sm" onPress={search.retry} data-testid="payment-search-retry">
             <FormattedMessage id="paymentSearch.retry" />
           </Button>
         </FieldError>

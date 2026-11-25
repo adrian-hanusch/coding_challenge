@@ -6,17 +6,13 @@ import { useDebouncedValue } from './useDebouncedValue.ts'
 
 const SEARCH_DEBOUNCE_MS = 250
 
-export function usePagedSearch<T>(
-  query: string,
-  optionsFor: (query: string) => PagedSearchOptions<T>,
-  { enabled = true } = {},
-) {
+export function usePagedSearch<T>(query: string, optionsFor: (query: string) => PagedSearchOptions<T>) {
   const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
   const search = useInfiniteQuery({
     ...optionsFor(debouncedQuery),
     placeholderData: keepPreviousData,
-    // No request for outdated text, e.g. a just deselected number.
-    enabled: enabled && debouncedQuery === query,
+    // No request for outdated text.
+    enabled: debouncedQuery === query,
   })
   const { data, hasNextPage, isFetchingNextPage } = search
   const items = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
