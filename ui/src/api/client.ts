@@ -1,4 +1,4 @@
-import type { ApiErrorCode, ApiProblem, FieldError } from './types.ts'
+import type { ApiErrorCode, ApiProblem } from './types.ts'
 
 export const API_BASE_URL = '/api'
 
@@ -8,14 +8,12 @@ export type ApiErrorKind = ApiErrorCode | 'UNKNOWN'
 export class ApiError extends Error {
   readonly status: number
   readonly code: ApiErrorKind
-  readonly fieldErrors: FieldError[]
 
-  constructor(status: number, code: ApiErrorKind, fieldErrors: FieldError[] = []) {
+  constructor(status: number, code: ApiErrorKind) {
     super(`API request failed: ${String(status)} ${code}`)
     this.name = 'ApiError'
     this.status = status
     this.code = code
-    this.fieldErrors = fieldErrors
   }
 }
 
@@ -25,9 +23,7 @@ function isProblem(body: unknown): body is ApiProblem {
 
 async function toApiError(response: Response): Promise<ApiError> {
   const body: unknown = await response.json().catch(() => null)
-  return isProblem(body)
-    ? new ApiError(response.status, body.code, body.errors)
-    : new ApiError(response.status, 'UNKNOWN')
+  return new ApiError(response.status, isProblem(body) ? body.code : 'UNKNOWN')
 }
 
 /** JSON request against the API. Throws `ApiError` for every non-2xx response. */
