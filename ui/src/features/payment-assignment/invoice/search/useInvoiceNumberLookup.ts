@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 
 import { invoiceSearchOptions } from '../../../../api/invoices.ts'
-import { type InvoiceInputResolution, resolveInvoiceInput } from './invoiceInput.ts'
+import { type InvoiceInputResolution, resolveInvoiceInput, SEARCH_FAILED } from './invoiceInput.ts'
 
 /**
  * `track` every text change and selection: `lookup` returns `null` once the text has changed, e.g. after React Aria
@@ -32,7 +32,7 @@ export function useInvoiceNumberLookup(customerId: string | null, initialText: s
       const result = await queryClient.infiniteQuery(invoiceSearchOptions({ q: query, customerId }))
       return isCurrent() ? resolveInvoiceInput(query, result.pages[0]?.items ?? []) : null
     } catch {
-      return isCurrent() ? { error: { code: 'searchFailed' } } : null
+      return isCurrent() ? { error: SEARCH_FAILED } : null
     }
   }
 

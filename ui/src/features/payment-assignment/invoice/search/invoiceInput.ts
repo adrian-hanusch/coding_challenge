@@ -2,6 +2,8 @@ import type { Invoice } from '../../../../api/types.ts'
 
 export type InvoiceInputError = { code: 'missing' } | { code: 'notFound'; query: string } | { code: 'searchFailed' }
 
+export const SEARCH_FAILED: InvoiceInputError = { code: 'searchFailed' }
+
 export type InvoiceInputResolution = { invoice: Invoice } | { error: InvoiceInputError }
 
 /**
