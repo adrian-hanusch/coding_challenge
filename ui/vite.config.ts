@@ -22,8 +22,8 @@ const emitMockWorker: Plugin = {
 export default defineConfig(({ command, mode }) => {
   // The empty prefix loads all variables, so API_URL from .env*.local works too, not only VITE_*.
   const env = loadEnv(mode, import.meta.dirname, '')
-  // Only .env.development and .env.demo turn it on; a regular build loads neither.
-  const mocking = env.VITE_API_MOCKING === 'true'
+  // Limited to the dev server and `--mode demo`: a regular build also reads .env.local, which must not ship the mock.
+  const mocking = env.VITE_API_MOCKING === 'true' && (command === 'serve' || mode === 'demo')
 
   return {
     plugins: [
