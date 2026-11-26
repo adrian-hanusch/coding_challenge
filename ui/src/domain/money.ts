@@ -12,14 +12,12 @@ export type AmountInput = number | null | TooPreciseAmount
 export const isTooPrecise = (amount: AmountInput): amount is TooPreciseAmount =>
   typeof amount === 'object' && amount !== null
 
-// Tolerates the float error of `euros * 100`, e.g. 0.29 * 100 = 28.999999999999996.
-const CENT_EPSILON = 1e-6
-
 /** Converts a parsed euro value (`NaN` for an empty field) into cents without rounding away extra decimals. */
 export function toAmountInput(euros: number): AmountInput {
   if (Number.isNaN(euros)) return null
-  const cents = Math.round(euros * 100)
-  return Math.abs(euros * 100 - cents) < CENT_EPSILON ? cents : { tooPrecise: euros }
+  // Compared in decimal, not via `euros * 100`, whose float error grows with the amount (0.29 * 100 = 28.999999999999996).
+  if (Number(euros.toFixed(2)) !== euros) return { tooPrecise: euros }
+  return Math.round(euros * 100)
 }
 
 /** Inverse of `toAmountInput`, `NaN` for an empty field. */
