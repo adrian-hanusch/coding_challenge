@@ -1,11 +1,5 @@
 {
   "app.title": "Zahlungsverwaltung",
-  "nav.label": "Hauptnavigation",
-  "nav.payments": "Zahlungen",
-  "nav.collapse": "Navigation einklappen",
-  "nav.expand": "Navigation ausklappen",
-  "nav.open": "Navigation öffnen",
-  "nav.close": "Navigation schließen",
   "notFound.title": "Seite nicht gefunden",
   "notFound.description": "Diese Adresse gibt es nicht.",
   "nav.backToPayments": "Zu den Zahlungen",

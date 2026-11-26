@@ -21,7 +21,7 @@ export function FeeSplitter({ paymentAmount, split, zeroHintId }: FeeSplitterPro
 
   return (
     <div className="@container flex flex-col gap-6" data-testid="fee-splitter">
-      {/* Container query: the card is much narrower than the viewport while the sidebar is open. */}
+      {/* Container query: the card, not the viewport, decides whether the fields fit side by side. */}
       <div className="grid grid-cols-1 gap-5 @xl:grid-cols-3">
         {FEE_TYPES.map((type) => {
           const fieldError = evaluation.fieldErrors[type]

@@ -33,8 +33,7 @@
     overflow-wrap: anywhere;
   }
 
-  .modal__heading,
-  .drawer__heading {
+  .modal__heading {
     @apply text-lg font-semibold tracking-tight;
   }
 

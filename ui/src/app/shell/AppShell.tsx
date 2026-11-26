@@ -1,23 +1,20 @@
-import { useMediaQuery } from '@heroui/react'
 import { Outlet } from 'react-router'
 
-import { MobileHeader } from './MobileHeader.tsx'
-import { Sidebar } from './navigation/Sidebar.tsx'
-
-const DESKTOP_QUERY = '(min-width: 48rem)'
+import { Brand } from './Brand.tsx'
+import { LocaleMenu } from './LocaleMenu.tsx'
 
 export function AppShell() {
-  const isDesktop = useMediaQuery(DESKTOP_QUERY)
-
   return (
-    <div className="flex min-h-svh">
-      {isDesktop && <Sidebar />}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {!isDesktop && <MobileHeader />}
-        <main className="flex-1 p-4 sm:p-8">
-          <Outlet />
-        </main>
-      </div>
+    <div className="flex min-h-svh flex-col">
+      <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-separator bg-background px-4 sm:px-8">
+        <Brand />
+        <div className="ms-auto">
+          <LocaleMenu />
+        </div>
+      </header>
+      <main className="flex-1 p-4 sm:p-8">
+        <Outlet />
+      </main>
     </div>
   )
 }
