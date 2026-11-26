@@ -38,6 +38,10 @@ export const db = {
     return state.invoices
   },
 
+  findAssignment(paymentId: string): Readonly<PaymentAssignment> | undefined {
+    return state.assignments.find((assignment) => assignment.paymentId === paymentId)
+  },
+
   /**
    * Stores the assignment, marks the payment as assigned and the invoice as paid (the backend decides).
    * A paid invoice is no longer OPEN, which keeps it from being assigned twice.

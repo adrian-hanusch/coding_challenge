@@ -27,5 +27,5 @@ export const isInvoiceRejected = (error: Error) => {
   return failure === 'invoiceNotOpen' || failure === 'invoiceNotFound'
 }
 
-/** A retry is safe: the server stores an assignment only once and answers PAYMENT_ALREADY_ASSIGNED otherwise. */
+/** A retry is safe: the server answers an identical request with the stored assignment and a different one with 409. */
 export const isRetryable = (error: Error) => failureOf(error) === 'unconfirmed'

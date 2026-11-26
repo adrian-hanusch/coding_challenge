@@ -7,7 +7,7 @@ import { http } from 'msw'
 import { IntlProvider } from 'react-intl'
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
-import type { Payment } from '../../api/types.ts'
+import type { CreateAssignmentRequest, Payment } from '../../api/types.ts'
 import en from '../../i18n/messages/en.json'
 import { db } from '../../mocks/db.ts'
 import { PAYMENTS } from '../../mocks/fixtures.ts'
@@ -256,6 +256,33 @@ describe('confirm an assignment', () => {
     const error = await screen.findByTestId('assignment-error')
     expect(error.textContent).toContain(en['assignment.error.unconfirmed'])
     expect(submitButton()).toHaveProperty('disabled', false)
+
+    await user.click(submitButton())
+
+    await waitFor(() => {
+      expect(onAssigned).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('reports success when a retry finds the assignment stored by the unconfirmed attempt', async () => {
+    const onAssigned = vi.fn()
+    const user = renderAssignment({ onAssigned })
+    server.use(
+      http.post(
+        ASSIGNMENT_URL,
+        async ({ params, request }) => {
+          const body = (await request.json()) as CreateAssignmentRequest
+          db.assign(String(params.paymentId), body.invoiceId, body.splits)
+          return problem(500, 'INTERNAL_ERROR', 'Stored, but the response got lost')
+        },
+        { once: true },
+      ),
+    )
+    await selectInvoice(user, '418')
+    await enterFees(user, '0', '0', '0')
+    await user.click(confirmButton())
+    await user.click(await screen.findByTestId('confirm-submit'))
+    await screen.findByTestId('assignment-error')
 
     await user.click(submitButton())
 

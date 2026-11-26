@@ -4,6 +4,7 @@ import {
   type FieldError,
   type Page,
   type Payment,
+  type PaymentAssignment,
   type PaymentSplit,
   SPLIT_TYPES,
   type SplitType,
@@ -50,6 +51,25 @@ function validateSplits(raw: unknown[]): { splits: PaymentSplit[] } | { errors: 
   })
 
   return errors.length > 0 ? { errors } : { splits }
+}
+
+/** Same invoice and the same amount per split type, in any order. */
+function isSameAssignment(existing: PaymentAssignment, body: unknown): boolean {
+  if (!isRecord(body) || body.invoiceId !== existing.invoiceId || !Array.isArray(body.splits)) return false
+  const splits: unknown[] = body.splits
+  return (
+    splits.length === existing.splits.length &&
+    existing.splits.every(({ type, amount }) =>
+      splits.some(
+        (split) =>
+          isRecord(split) &&
+          split.type === type &&
+          isRecord(split.amount) &&
+          split.amount.amountMinor === amount.amountMinor &&
+          split.amount.currency === amount.currency,
+      ),
+    )
+  )
 }
 
 function parseSearch(searchParams: URLSearchParams): { query: PageQuery } | { errors: FieldError[] } {
@@ -109,6 +129,9 @@ export const paymentHandlers = [
       const payment = db.findPayment(params.paymentId)
       if (!payment) return problem(404, 'PAYMENT_NOT_FOUND', `Payment ${params.paymentId} not found`)
       if (payment.status !== 'UNMATCHED') {
+        // A retry after a lost response must not report the client's own assignment as someone else's.
+        const existing = db.findAssignment(payment.id)
+        if (existing && isSameAssignment(existing, body)) return HttpResponse.json(existing)
         return problem(409, 'PAYMENT_ALREADY_ASSIGNED', `Payment ${payment.id} is already assigned`)
       }
 

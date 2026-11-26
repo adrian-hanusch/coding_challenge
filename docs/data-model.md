@@ -203,7 +203,7 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 | `GET /payments?q=&status=UNMATCHED&offset=0&limit=10` | `Page<Payment>` | Choose the payment in the first step (A12) |
 | `GET /payments/{paymentId}` | `Payment` | Load the payment, also when it is already `ASSIGNED` |
 | `GET /invoices?q=&customerId=&offset=0&limit=10` | `Page<Invoice>` | Autocomplete and lookup of a typed invoice number |
-| `POST /payments/{paymentId}/assignment` | `201 PaymentAssignment` | Confirm the assignment with all four splits |
+| `POST /payments/{paymentId}/assignment` | `201 PaymentAssignment` (`200` for a repeat) | Confirm the assignment with all four splits |
 
 ### Payment search
 
@@ -226,6 +226,8 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 
 The request is `{ invoiceId, splits }` with all four splits, including `MERCHANT_PAYOUT`, so the server checks exactly the values shown in the confirmation modal. A difference between payment and invoice amount is not rejected (A4). On success the payment becomes `ASSIGNED` and the invoice `PAID`.
 
+The request is idempotent: once the payment is assigned, the same `invoiceId` with the same amount per split type returns `200` with the stored assignment. A retry after a lost response (timeout, 5xx) therefore succeeds instead of reporting the client's own assignment as `PAYMENT_ALREADY_ASSIGNED`.
+
 ### Errors
 
 RFC 9457 problem details (`application/problem+json`): `{ status, code, title, errors?: [{ field, code }] }`. The UI maps `code` to a message id and never shows `title` (D1).
@@ -234,7 +236,7 @@ RFC 9457 problem details (`application/problem+json`): `{ status, code, title, e
 |---|---|---|
 | 400 | `INVALID_QUERY` | Invalid search parameters, including a payment `status` other than `UNMATCHED` |
 | 404 | `PAYMENT_NOT_FOUND` | Unknown payment id |
-| 409 | `PAYMENT_ALREADY_ASSIGNED` | Payment is no longer `UNMATCHED` |
+| 409 | `PAYMENT_ALREADY_ASSIGNED` | Payment is no longer `UNMATCHED` and the request differs from the stored assignment |
 | 409 | `INVOICE_NOT_OPEN` | Invoice is not `OPEN` or already assigned (A3) |
 | 422 | `INVOICE_NOT_FOUND` | Unknown `invoiceId` in the request body |
 | 422 | `VALIDATION_FAILED` | Not exactly one split per type, or an amount that is not an integer ≥ 0 in EUR |
