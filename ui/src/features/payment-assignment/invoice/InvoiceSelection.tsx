@@ -1,9 +1,10 @@
-import { useEffect, useId, useRef } from 'react'
+import { useId, useRef } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import type { Invoice, Payment } from '../../../api/types.ts'
 import { Notice } from '../../../components/Notice.tsx'
 import { invoiceDifference } from '../../../domain/invoice.ts'
+import { useFocusWhen } from '../../../lib/useFocusWhen.ts'
 import { InvoiceMismatchAlert } from './InvoiceMismatchAlert.tsx'
 import { InvoiceSummary } from './InvoiceSummary.tsx'
 import { InvoiceSearchField, type InvoiceSearchStart } from './search/InvoiceSearchField.tsx'
@@ -18,19 +19,10 @@ interface InvoiceSelectionProps {
 export function InvoiceSelection({ payment, invoice, search, onSelect }: InvoiceSelectionProps) {
   const intl = useIntl()
   const alertId = useId()
-  const shouldFocusSelection = useRef(false)
   const selectionRef = useRef<HTMLDivElement>(null)
-  const invoiceId = invoice?.id
 
-  useEffect(() => {
-    if (invoiceId && shouldFocusSelection.current) selectionRef.current?.focus()
-    shouldFocusSelection.current = false
-  }, [invoiceId])
-
-  function select(next: Invoice, wasFocused: boolean) {
-    shouldFocusSelection.current = wasFocused
-    onSelect(next)
-  }
+  // The search field unmounts with the selection, so focus would otherwise fall back to the page body.
+  useFocusWhen(selectionRef, invoice?.id)
 
   if (!invoice) {
     return (
@@ -38,7 +30,7 @@ export function InvoiceSelection({ payment, invoice, search, onSelect }: Invoice
         customerId={payment.customerId}
         senderName={payment.senderName}
         start={search}
-        onSelect={select}
+        onSelect={onSelect}
       />
     )
   }

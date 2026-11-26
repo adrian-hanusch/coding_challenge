@@ -1,5 +1,5 @@
 import { ComboBox, Description, FieldError, Header, Input, Label, ListBox } from '@heroui/react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { type Invoice, MAX_SEARCH_LENGTH } from '../../../../api/types.ts'
@@ -20,14 +20,12 @@ interface InvoiceSearchFieldProps {
   customerId: string | null
   senderName: string
   start: InvoiceSearchStart
-  /** `wasFocused` is false when the user had already moved on, i.e. for a lookup on blur. */
-  onSelect: (invoice: Invoice, wasFocused: boolean) => void
+  onSelect: (invoice: Invoice) => void
 }
 
-/** Invoice autocomplete with server-side search. A typed number is resolved on blur or Enter. */
+/** Invoice autocomplete with server-side search. A typed number is resolved with Enter. */
 export function InvoiceSearchField({ customerId, senderName, start, onSelect }: InvoiceSearchFieldProps) {
   const intl = useIntl()
-  const inputRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState(start.text)
   const [inputError, setInputError] = useState<InvoiceInputError | null>(null)
 
@@ -45,7 +43,7 @@ export function InvoiceSearchField({ customerId, senderName, start, onSelect }: 
     if (query === '') return
     const resolution = await lookup(query)
     if (!resolution) return
-    if ('invoice' in resolution) onSelect(resolution.invoice, document.activeElement === inputRef.current)
+    if ('invoice' in resolution) onSelect(resolution.invoice)
     else setInputError(resolution.error)
   }
 
@@ -64,7 +62,7 @@ export function InvoiceSearchField({ customerId, senderName, start, onSelect }: 
       onInputChange={changeText}
       onChange={(key) => {
         const next = search.invoices.find((item) => item.id === key)
-        if (next) onSelect(next, true)
+        if (next) onSelect(next)
       }}
       data-testid="invoice-search"
     >
@@ -73,11 +71,9 @@ export function InvoiceSearchField({ customerId, senderName, start, onSelect }: 
       </Label>
       <ComboBox.InputGroup>
         <Input
-          ref={inputRef}
           autoFocus={start.autoFocus}
           maxLength={MAX_SEARCH_LENGTH}
           placeholder={intl.formatMessage({ id: 'invoiceSearch.placeholder' })}
-          onBlur={() => void resolveTypedInput()}
           onKeyDown={(event) => {
             if (event.key === 'Enter') void resolveTypedInput()
           }}
