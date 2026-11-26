@@ -1,169 +1,208 @@
-# Geplante Libraries
+# Libraries
 
-Geplanter Technologie-Stack mit Begründung. **Vorgegeben** sind HeroUI v3, TanStack Query, react-router und Zustand
-(nur bei Bedarf). Alles Übrige ist eine eigene Wahl.
-Zugehörige Annahmen, Entscheidungen und offene Fragen stehen in [assumptions.md](assumptions.md).
+The technology stack and the reasons behind it. HeroUI v3, TanStack Query, react-router and Zustand (only where needed)
+are **given**. Everything else is our own choice.
+Related assumptions, decisions and open questions are in [assumptions.md](assumptions.md).
 
-## Übersicht
+## Overview
 
-| Bereich | Library | Vorgabe / Wahl |
+| Area | Library | Given / choice |
 |---|---|---|
-| Sprache | TypeScript (strict) | Vorgabe |
-| Framework | React 19 | Voraussetzung für HeroUI v3 |
-| Build | Vite | Wahl |
-| Paketmanager | pnpm | Wahl |
-| UI-Komponenten | HeroUI v3 | Vorgabe |
-| Styling | Tailwind CSS v4 | Voraussetzung für HeroUI v3 |
-| Schrift | IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`, selbst gehostet) | Wahl |
-| Icons | lucide-react | Wahl |
-| Server-State | TanStack Query v5 | Vorgabe |
-| Routing | react-router v8 (Data Mode) | Vorgabe |
-| Formulare / Validierung | ohne Library: `useState` + reine Funktionen in `domain/` | Wahl |
-| Client-State | Zustand (mit `persist`) | Vorgabe |
-| i18n | react-intl (FormatJS) | vorläufig (D1) |
-| API-Mocking | MSW v3 | vorläufig (A10) |
-| Tests | Vitest + React Testing Library + user-event | Wahl |
-| Codequalität | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query, simple-import-sort) + Prettier | Wahl |
+| Language | TypeScript (strict) | Given |
+| Framework | React 19 | Required by HeroUI v3 |
+| Build | Vite | Choice |
+| Package manager | pnpm | Choice |
+| UI components | HeroUI v3 | Given |
+| Styling | Tailwind CSS v4 | Required by HeroUI v3 |
+| Font | IBM Plex Sans (`@fontsource-variable/ibm-plex-sans`, self-hosted) | Choice |
+| Icons | lucide-react | Choice |
+| Server state | TanStack Query v5 | Given |
+| Routing | react-router v8 (data mode) | Given |
+| Forms / validation | No library: `useState` + pure functions in `domain/` | Choice |
+| Client state | Zustand (with `persist`) | Given |
+| i18n | react-intl (FormatJS) | Provisional (D1) |
+| API mocking | MSW v3 | Provisional (A10) |
+| Tests | Vitest, React Testing Library, user-event, jsdom | Choice |
+| Code quality | ESLint (typescript-eslint, react-hooks, @tanstack/eslint-plugin-query, simple-import-sort) + Prettier | Choice |
 
 ---
 
-## Begründungen
+## Reasons
 
 ### React 19 + TypeScript + Vite
-- HeroUI v3 setzt React 19 voraus.
-- TypeScript im `strict`-Modus ist vorgegeben. Es ist auch der wichtigste Schutz bei Geldbeträgen, etwa durch einen eigenen Typ `Cents`.
-- Vite ist der Standard für reine Client-Anwendungen: schneller Dev-Server, und Vitest nutzt dieselbe Konfiguration. Server-Rendering braucht die Aufgabe nicht, deshalb kein Next.js und kein Framework-Modus von react-router.
+- HeroUI v3 requires React 19.
+- TypeScript in `strict` mode is given. It is also the main safeguard for money amounts.
+- Vite is the standard for client-only applications: a fast dev server, and Vitest uses the same configuration. The
+  task needs no server rendering, so there is no Next.js and no react-router framework mode.
+- The build splits the libraries into three chunks (React with the router, HeroUI with React Aria, the rest), so they
+  stay cached when only the app changes. The app itself is about 55 kB, so the routes are not loaded lazily: both pages
+  need the same libraries, and splitting them would add a request without saving any.
 
 ### pnpm
-- Schnell und mit strikter Auflösung der Abhängigkeiten: Nicht deklarierte Pakete lassen sich nicht importieren.
-- Die geforderte Version steht in `devEngines.packageManager` in der `package.json` (`^12.11.2`). Mit einer älteren pnpm-Version bricht `pnpm install` ab.
-- Die genaue Version hält die `pnpm-lock.yaml` fest. `pnpm install --frozen-lockfile` erzwingt sie, damit alle Prüfer dieselbe pnpm-Version nutzen.
-- Das übliche `packageManager`-Feld wird **nicht** genutzt: pnpm löst seine eigene Version nur über die globale Registry-Konfiguration auf, und die Firmen-Registry liefert dafür 403. Corepack wertet `devEngines` nicht aus, deshalb muss pnpm 12 global installiert sein (siehe `ui/README.md`).
+- Fast, with strict dependency resolution: undeclared packages cannot be imported.
+- The required version is in `devEngines.packageManager` in `package.json` (`^12.11.2`). An older pnpm aborts
+  `pnpm install`.
+- `pnpm-lock.yaml` pins the exact versions. `pnpm install --frozen-lockfile` enforces them, so every reviewer gets the
+  same dependencies.
+- The usual `packageManager` field is **not** used: with it, pnpm downloads and switches to that exact version on its
+  own, through the global registry configuration, which not every network allows. Corepack does not read `devEngines`,
+  so pnpm 12 is installed globally or run through `npx` (see `ui/README.md`).
+- `pnpm-workspace.yaml` allows msw 3 for `@vitest/mocker`, which still names msw 2 as its peer. It only uses msw for
+  Vitest's browser mode, which this project does not use.
 
-### HeroUI v3 + Tailwind CSS v4 *(Vorgabe)*
-- Baut auf **React Aria Components** auf. Barrierefreiheit, Tastaturbedienung und Fokusführung (Combobox, Modal) sind dadurch bereits gelöst.
-- Die für die Aufgabe wichtigen Komponenten sind vorhanden:
+### HeroUI v3 + Tailwind CSS v4 *(given)*
+- Built on **React Aria Components**. Accessibility, keyboard support and focus management (combobox, modal) come with
+  it.
+- The components this task needs are available:
 
-| Komponente | Einsatz |
+| Component | Use |
 |---|---|
-| `NumberField` | Gebühren. Liest Eingaben passend zur Sprache, Zahl ohne Symbol, Währung als `InputGroup.Suffix`, `minValue={0}`. |
-| `ComboBox` | Rechnungssuche (Bonus: Autocomplete). Für freie Eingabe der Nummer mit `allowsCustomValue`. Die klassische Combobox ist `ComboBox`, nicht die v3-Komponente `Autocomplete`. |
-| `Modal` / `AlertDialog` | Bestätigungsschritt (Bonus) |
-| `Toast` | Erfolgsmeldung |
-| `Alert`, `FieldError` | Warnungen und Fehlermeldungen |
-| `Card`, `Skeleton` | Layout und Ladezustände |
+| `NumberField` | Fees. Parses input in the active locale, a number without symbol, the currency as `InputGroup.Suffix`, `minValue={0}`. |
+| `ComboBox` | Invoice search (bonus: autocomplete). `allowsCustomValue` for typing a number. The classic combobox is `ComboBox`, not the v3 component `Autocomplete`. |
+| `Modal` / `AlertDialog` | Confirmation step (bonus) |
+| `Toast` | Success message |
+| `Alert`, `FieldError` | Warnings and error messages |
+| `Card`, `Skeleton` | Layout and loading states |
 
-- Bekannte Stolperstellen:
-  - `NumberField` liefert eine Gleitkommazahl und für ein leeres Feld `NaN`. Die Umrechnung in Cent passiert deshalb direkt am Feld.
-  - Bei serverseitiger Suche muss der eingebaute Client-Filter der `ComboBox` ausgeschaltet werden. Dazu werden `items` und `inputValue` von außen gesteuert.
-  - Die eingebaute Validierung von React Aria wird **nicht** genutzt. Die Komponenten bekommen nur `isInvalid` und die Fehlermeldung aus der eigenen Prüfung (siehe Formular-State). Ausnahme: `minValue={0}` am `NumberField` lässt negative Eingaben gar nicht erst zu.
-- Tailwind v4 wird über CSS konfiguriert (`@import "tailwindcss"`), eine `tailwind.config.js` gibt es nicht mehr.
+- Known pitfalls:
+  - `NumberField` returns a float and `NaN` for an empty field. The conversion to cents therefore happens right at the
+    field.
+  - For server-side search the ComboBox's built-in client filter must be off. `items` and `inputValue` are therefore
+    controlled from outside (`components/search/SearchField`).
+  - React Aria's built-in validation is **not** used. The components only get `isInvalid` and the message from our own
+    validation (see form state). Exception: `minValue={0}` on the `NumberField` prevents negative input altogether.
+- Tailwind v4 is configured in CSS (`@import "tailwindcss"`). There is no `tailwind.config.js` anymore.
 
-### TanStack Query v5 *(Vorgabe)*
-- Verwaltet die Server-Daten: Zahlung, Rechnungssuche, Absenden der Zuordnung.
-- Rechnungssuche über `queryKey: ['invoices', { search, customerId }]` mit verzögertem Suchbegriff (Debounce), `placeholderData: keepPreviousData` und `signal` zum Abbrechen. Damit kann eine veraltete Antwort keine neuere überschreiben.
-- Die Zuordnung läuft über `useMutation`:
-  - `isPending` sperrt den Bestätigen-Button gegen doppeltes Absenden.
-  - Nach Erfolg gilt die Zahlung im Cache als zugeordnet, die Zahlungssuche wird verworfen, die Rechnungen gelten als veraltet. Danach öffnet sich die Zahlungsauswahl.
-- Die Query Devtools sind nur in der Entwicklung aktiv.
+### TanStack Query v5 *(given)*
+- Manages server data: the payment, the searches, submitting the assignment.
+- Searches use query keys such as `['invoices', 'search', { q, customerId }]` with a debounced search text,
+  `placeholderData: keepPreviousData` and `signal` for cancellation, so an outdated response cannot overwrite a newer
+  one.
+- The assignment runs through `useMutation`:
+  - `isPending` locks the confirm button against double submission.
+  - Components below the hook only see `AssignmentSubmission` (`isPending`, `error`, `submit`, `reset`), not the
+    mutation object, so they do not depend on TanStack Query.
+  - On success the payment is marked as assigned in the cache, the payment searches are dropped and the invoices are
+    invalidated. Then the payment selection opens.
 
-### react-router v8, Data Mode *(Vorgabe)*
-- Wird mit `createBrowserRouter` eingesetzt statt mit `<BrowserRouter>`, denn nur so funktionieren die Fehlerseiten der Routen (**`errorElement`**).
-- Daten werden **nicht** über `loader` geladen, sondern nur über TanStack Query. So gibt es einen einzigen Cache und keine doppelte Datenhaltung.
-- Die HeroUI-Komponenten (React Aria) navigieren über `RouterProvider` aus `@heroui/react` in der Wurzelroute
-  (`RouterLinkProvider`), angebunden an `useNavigate` und
-  `useHref`. Links mit `href` laden die Seite dadurch nicht neu. `routerOptions` ist über eine Typ-Erweiterung von
-  `react-aria-components` typisiert (`routerConfig.d.ts`), deshalb ist das Paket eine direkte Abhängigkeit.
-- Routen: `/payments` (Schritt 1, Zahlung wählen) und `/payments/:paymentId/assign` (gewählte Zahlung, Schritte 2 und 3). Beide zeigen denselben Prozess. Der Bestätigungsschritt ist ein Modal, keine eigene Route, damit die Eingaben beim Neuladen nicht verloren gehen.
+### react-router v8, data mode *(given)*
+- Used with `createBrowserRouter` instead of `<BrowserRouter>`, because only then do the routes' error pages
+  (**`errorElement`**) work.
+- Data is **not** loaded through `loader`, only through TanStack Query. That keeps a single cache and no duplicate data.
+- HeroUI components (React Aria) navigate through `RouterProvider` from `@heroui/react` in the root route
+  (`RouterLinkProvider`), connected to `useNavigate` and `useHref`. Links with `href` therefore do not reload the page.
+  `routerOptions` is typed by augmenting `react-aria-components` (`routerConfig.d.ts`), which is why the package is a
+  direct dependency.
+- Routes: `/payments` (step 1, choose a payment) and `/payments/:paymentId/assign` (chosen payment, steps 2 and 3). Both
+  show the same process. The confirmation step is a modal, not a route of its own, so the input survives a reload of the
+  dialog's page state.
+- Only `pages/` navigate. Features report what happened through callbacks (`onSelect`, `onChangePayment`, `onAssigned`),
+  so they do not depend on paths. Navigation state is the typed `SelectPaymentReason` and is checked with
+  `selectPaymentReason`, because `location.state` is untyped and survives in the browser history.
 
-### Formular-State ohne Library *(Wahl)*
+### Form state without a library *(choice)*
 
-**Entscheidung:** `useState` in einem Custom Hook, Berechnung und Prüfung als reine Funktionen. Ursprünglich war TanStack Form
-mit zod geplant.
+**Decision:** `useState` in custom hooks, calculation and validation as pure functions. TanStack Form with zod was the
+original plan.
 
-| Kriterium | ohne Library | TanStack Form + zod | React Hook Form |
+| Criterion | No library | TanStack Form + zod | React Hook Form |
 |---|---|---|---|
-| Passt zu React Aria (Felder werden von außen gesteuert) | ✅ | ✅ von Haus aus | ⚠️ jedes Feld braucht einen `Controller` |
-| Feldübergreifende Prüfung (Gebühren ≤ Betrag, Summe = Betrag) | ✅ eine reine Funktion | ✅ Validator auf Formularebene | ⚠️ `superRefine` + `trigger()` von Hand |
-| Zustände wie „berührt“, „wird abgeschickt“ | ⚠️ selbst gebaut (ein `Set`, `isPending` der Mutation) | ✅ | ✅ |
-| Zusätzliche Abhängigkeiten | ✅ keine | ❌ zwei | ❌ eine bis zwei |
+| Fits React Aria (fields are controlled) | ✅ | ✅ out of the box | ⚠️ every field needs a `Controller` |
+| Cross-field validation (fees ≤ amount, sum = amount) | ✅ one pure function | ✅ form-level validator | ⚠️ `superRefine` + manual `trigger()` |
+| States such as "touched", "submitting" | ⚠️ built by hand (a `Set`, the mutation's `isPending`) | ✅ | ✅ |
+| Additional dependencies | ✅ none | ❌ two | ❌ one or two |
 
-- **Warum ohne Library:** Das Formular hat ein Rechnungsfeld und vier Beträge. Typprüfung und Parsen übernimmt das
-  `NumberField`, die Beträge kommen bereits als Cent an. Übrig bleiben zwei feldübergreifende Regeln. Dafür lohnen sich
-  zwei Libraries nicht, und Berechnung und Prüfung bleiben ohne React testbar.
-- **Warum nicht React Hook Form:** Die Stärke von RHF ist, Werte direkt aus nativen Eingabefeldern zu lesen. Diese
-  Stärke fällt weg, weil die HeroUI-Komponenten gesteuert werden müssen.
-- **Umsetzung:**
-  - `domain/split.ts` enthält Entwurf (`SplitDraft`) und eine Funktion `evaluateSplit`, die Berechnung und Prüfung
-    zusammen liefert. Die Prüfung liefert Fehlercodes mit Beträgen, die Komponenten machen daraus ICU-Texte.
-  - `useSplitDraft` hält Entwurf und berührte Felder, ruft `evaluateSplit` einmal pro Rendern auf und bietet Setter
-    mit Updater-Funktionen an. `PaymentAssignment` nutzt den Hook und gibt das Ergebnis als ein Objekt weiter, damit
-    Aufteilung und Bestätigungsdialog dieselben Werte zeigen. Die Seite selbst lädt nur die Zahlung.
-  - Gespeichert wird nur, was der Nutzer eingibt. Der vorgeschlagene Merchant-Betrag wird bei jedem Rendern berechnet,
-    als State existiert nur eine Überschreibung (`merchantOverride`, A1).
-  - `components/MoneyField` bindet das `NumberField` einmal an Cent an (`null` für ein leeres Feld). Mehr als zwei
-    Nachkommastellen rundet es nicht, sondern gibt sie als `{ tooPrecise: euros }` weiter, damit kein anderer Betrag als
-    der eingegebene übernommen wird. Die Umrechnung (`toAmountInput`, `toEuros`) liegt als reine Funktion in
-    `lib/money.ts`, die Formatierungs-Hooks liegen getrennt in `lib/useFormatMoney.ts`, damit `domain/` kein React
-    importiert.
-  - Fehlende Eingaben erscheinen beim Verlassen eines Feldes, nicht bei jedem Tastendruck. Welche Felder schon verlassen
-    wurden, hält `useSplitDraft`. Was noch fehlt, steht neben dem gesperrten Bestätigen-Button.
-    Die Summe wird erst geprüft, wenn alle Felder gültig sind.
+- **Why no library:** the form has one invoice field and four amounts. The `NumberField` does type checking and
+  parsing, so the amounts already arrive as cents. Two cross-field rules remain. That is not worth two libraries, and
+  calculation and validation stay testable without React.
+- **Why not React Hook Form:** its strength is reading values straight from native inputs. That strength is lost
+  because the HeroUI components have to be controlled.
+- **Implementation:**
+  - `domain/split.ts` holds the draft (`SplitDraft`) and `evaluateSplit`, which returns calculation and validation
+    together. Validation returns error codes with amounts, the components turn them into ICU messages.
+  - `domain/money.ts` holds the entered amount (`AmountInput`: cents, `null` for an empty field, or `{ tooPrecise }`),
+    the upper limit and the conversion between euros and cents. `lib/stripCurrency.ts` cleans pasted text, and the
+    formatting hooks are in `lib/useFormatMoney.ts`, so `domain/` imports no React.
+  - `useSplitDraft` holds the draft and the touched fields, calls `evaluateSplit` once per render and offers setters
+    with updater functions.
+  - `useAssignmentFlow` combines the chosen invoice, the split draft, the open dialog and the submission.
+    `PaymentAssignment` only renders it, so the fee splitter and the confirmation dialog show the same values. The page
+    itself only loads the payment.
+  - Only what the user enters is stored. The suggested merchant payout is calculated on every render; the only state is
+    an override (`merchantOverride`, A1).
+  - `components/MoneyField` binds the `NumberField` to cents once (`null` for an empty field). It does not round more
+    than two decimals but passes them on as `{ tooPrecise: euros }`, so no amount other than the typed one is taken.
+  - Missing input is shown when a field is left, not on every keystroke. Which fields were left is kept by
+    `useSplitDraft`. Pressing the confirm button with input missing shows every error at its field and focuses the first
+    one, instead of disabling the button. The sum is only checked once every field is valid.
 
-### Zustand + `persist` *(Vorgabe)*
-- Jede Art von State hat genau einen Platz:
-  - Server-Daten → TanStack Query
-  - Formularwerte → `useState` in `PaymentAssignment` bzw. `useSplitDraft`, Berechnung und Prüfung als reine Funktionen in `domain/`
-  - App-weiter Client-State (Sprachwahl, Sidebar eingeklappt) → Zustand
-  - State, den nur eine Komponente braucht (mobiles Menü offen, Modal offen) → `useState`
-- Ein Store pro Thema, neben dem Code, der ihn nutzt:
-  - `i18n/localeStore.ts`: Sprache. Startwert aus der Browsersprache, die Wahl des Nutzers wird gespeichert.
-  - `app/shell/navigation/navigationStore.ts`: Sidebar eingeklappt.
-- `persist` schreibt in `localStorage`. `partialize` legt fest, was gespeichert wird. `merge` übernimmt nur gültige
-  Werte, damit ein veralteter oder von Hand geänderter Eintrag die App nicht in einen ungültigen Zustand bringt.
-  Ist `localStorage` gesperrt (privater Modus), läuft die App ohne Speichern weiter.
-- Komponenten lesen mit Selektoren (`useLocaleStore((s) => s.locale)`), damit sie nur bei Änderung dieses Werts neu rendern.
-- Server-Daten kommen **nicht** in Zustand, sonst gäbe es sie doppelt neben dem Query-Cache.
+### Zustand + `persist` *(given)*
+- Every kind of state has exactly one place:
+  - Server data → TanStack Query
+  - Form values → `useState` in `useAssignmentFlow` and `useSplitDraft`, calculation and validation as pure functions in
+    `domain/`
+  - App-wide client state (the language) → Zustand
+  - State only one component needs (the open confirmation dialog) → `useState`
+- One store per topic, next to the code that uses it. The only one is `i18n/localeStore.ts`: the language, starting from
+  the browser language, with the user's choice stored.
+- `persist` writes to `localStorage`. `partialize` decides what is stored. `merge` only takes valid values, so a stale or
+  hand-edited entry cannot put the app into an invalid state. If `localStorage` is blocked (private mode), the app keeps
+  running without storing.
+- Components read with selectors (`useLocaleStore((s) => s.locale)`), so they only re-render when that value changes.
+- Server data does **not** go into Zustand, otherwise it would exist twice next to the query cache.
 
-### react-intl (FormatJS) *(vorläufig)*
-- Texte liegen in `de.json` und `en.json`. Die Schlüssel sind flach und durch Punkte gegliedert. Platzhalter folgen der ICU-Syntax (`{amount}`).
-- Beträge werden mit `intl.formatNumber(cents / 100, { style: 'currency', currency })` angezeigt. Im `NumberField` steht die Zahl mit denselben Trennzeichen, das Währungssymbol als Suffix daneben.
-- **Eine Sprachquelle** für `IntlProvider` (react-intl) und `I18nProvider` (React Aria) (D1).
-- Die Message-IDs sind typisiert: Über die globalen FormatJS-Typen (`FormatjsIntl.Message`) gelten die Schlüssel aus `en.json` als einzige erlaubten IDs. Eine unbekannte ID an `<FormattedMessage>` oder `formatMessage` schlägt schon im Typecheck fehl.
-- Fehlt in `de.json` ein Schlüssel, meldet das der Typecheck (`satisfies`). Ein Test prüft zusätzlich, dass `de.json` keine überzähligen Schlüssel enthält.
+### react-intl (FormatJS) *(provisional)*
+- Messages live in `de.json` and `en.json`. Keys are flat and structured by dots. Placeholders follow ICU syntax
+  (`{amount}`).
+- Amounts are shown with `intl.formatNumber(cents / 100, { style: 'currency', currency })`. The `NumberField` shows the
+  number with the same separators and the currency symbol as a suffix.
+- **One locale source** for `IntlProvider` (react-intl) and `I18nProvider` (React Aria) (D1).
+- Message ids are typed: through the global FormatJS types (`FormatjsIntl.Message`) the keys of `en.json` are the only
+  allowed ids. An unknown id in `<FormattedMessage>` or `formatMessage` fails the typecheck.
+- A key missing in `de.json` fails the typecheck (`satisfies`).
 
-### MSW v3 *(vorläufig)*
-- Fängt `fetch` auf Netzwerkebene ab. Die App-Logik bleibt dadurch unverändert, wenn später eine echte API angebunden wird.
-- Dieselben Handler laufen im Browser (Service Worker) und in Vitest (`setupServer`).
-- Verzögerung und Fehlerfälle lassen sich über URL-Parameter steuern (siehe `ui/README.md`, „Szenarien“).
-- Das Vite-Plugin `msw/vite` liefert den Service Worker im Dev-Server aus. Es läuft im Modus `worker-only`, damit die
-  stabile `setupWorker`-API genutzt wird und nicht das experimentelle `virtual:msw`. Eine generierte
-  `public/mockServiceWorker.js` gibt es deshalb nicht, und der Produktions-Build enthält weder Worker noch Handler.
+### MSW v3 *(provisional)*
+- Intercepts `fetch` at the network level. The app logic stays the same when a real API is connected later.
+- The same handlers run in the browser (service worker) and in Vitest (`setupServer`).
+- Latency and failures can be controlled through URL parameters (see `ui/README.md`, "Scenarios").
+- The Vite plugin `msw/vite` serves the service worker in the dev server. It runs in `worker-only` mode, so the stable
+  `setupWorker` API is used instead of the experimental `virtual:msw`. There is therefore no generated
+  `public/mockServiceWorker.js`, and the production build contains neither worker nor handlers.
 
-### Vitest + React Testing Library + user-event
-- Vitest nutzt die Vite-Konfiguration, ein eigenes Build-Setup ist nicht nötig. Die API ist mit Jest kompatibel.
-- Was getestet wird:
-  - **Unit-Tests:** Berechnung des Splits, Cent-Umrechnung, Schema (Grenzfälle wie Summe > Betrag, 0, mehr als 2 Nachkommastellen, leeres Feld).
-  - **Integrationstests:** Rechnung suchen und wählen, Gebühren eingeben, Fehleranzeige, Bestätigungsdialog, Fehler beim Absenden. Alles gegen die MSW-Handler.
-- Tests laufen mit **fester Sprache**, damit Zahlenformate in den Prüfungen nicht von der Rechnerumgebung abhängen.
-- Testumgebung `jsdom`. Falls React Aria dort Probleme macht (z. B. Pointer-Events), ist `happy-dom` die Alternative.
+### Vitest
+- Vitest uses the Vite configuration, so no separate build setup is needed. Its API is compatible with Jest.
+- Unit tests cover the split calculation, the cent conversion, the mapping of server errors, pagination and the mock
+  API's search parameters, payment search and invoice search (against the MSW handlers via `setupServer`).
+- A first component test renders the assignment against the MSW handlers in jsdom (React Testing Library, user-event)
+  and checks what a confirm attempt with input missing shows and focuses. Only that file opts into jsdom; the unit
+  tests stay in Node.
+- The rest of the main flow (fees, dialog, server errors) has no component or end-to-end tests yet.
 
 ### ESLint + Prettier
-- `typescript-eslint` mit den strengsten typgestützten Regelsätzen (`strictTypeChecked` + `stylisticTypeChecked`).
-- `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` (prüft, dass Hot Reload in Vite funktioniert) und `@tanstack/eslint-plugin-query`. Letzteres erkennt unvollständige Query-Keys.
-- `eslint-plugin-simple-import-sort` legt die Reihenfolge der Importe fest: erst Pakete, dann relative Importe, jeweils alphabetisch. `pnpm lint:fix` sortiert automatisch.
-- Prettier kümmert sich nur um die Formatierung, ESLint nur um Regeln. `eslint-config-prettier` schaltet dazu alle ESLint-Regeln ab, die mit Prettier kollidieren würden.
+- `typescript-eslint` with the strictest type-aware rule sets (`strictTypeChecked` + `stylisticTypeChecked`).
+- `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` (checks that hot reload in Vite works) and
+  `@tanstack/eslint-plugin-query`. The latter detects incomplete query keys.
+- `eslint-plugin-simple-import-sort` fixes the order of imports: packages first, then relative imports, each
+  alphabetical. `pnpm lint:fix` sorts automatically.
+- Prettier only formats, ESLint only checks rules. `eslint-config-prettier` turns off every ESLint rule that would clash
+  with Prettier.
 
 ---
 
-## Bewusst nicht eingesetzt
+## Architecture trade-offs
 
-| Library | Grund |
+- `domain/` uses the API types from `api/types.ts` (`Money`, `Invoice`, `SplitType`) directly instead of its own
+  models. At this size a mapping layer would only copy the same shapes. If the API and the domain drift apart, `domain/`
+  gets its own types and `api/` maps to them.
+
+## Deliberately not used
+
+| Library | Reason |
 |---|---|
-| Redux / RTK | Unnötig: Server-State liegt in Query, Formular-State ist lokal |
-| TanStack Form, zod, React Hook Form | Für ein Rechnungsfeld und vier Beträge zu viel, siehe Formular-State |
-| Formik | Wird kaum noch weiterentwickelt, schwache Typisierung |
-| dinero.js / big.js | Es gibt nur Addition und Subtraktion ganzer Cent-Beträge (A8). Ein kleines eigenes Modul reicht. Bei Prozent-Gebühren oder mehreren Währungen neu bewerten. |
-| axios | `fetch` reicht, und MSW fängt es direkt ab |
-| date-fns / dayjs | Datumsanzeige über `Intl` bzw. react-intl (`formatDate`) |
-| Lodash (z. B. `debounce`) | Ein kleiner `useDebouncedValue`-Hook genügt |
+| Redux / RTK | Unnecessary: server state is in Query, form state is local |
+| TanStack Form, zod, React Hook Form | Too much for one invoice field and four amounts, see form state |
+| Formik | Hardly maintained anymore, weak typing |
+| dinero.js / big.js | Only addition and subtraction of whole cents (A8). A small module of our own is enough. Re-evaluate for percentage fees or several currencies. |
+| axios | `fetch` is enough, and MSW intercepts it directly |
+| date-fns / dayjs | Dates are shown through `Intl` and react-intl (`formatDate`) |
+| Lodash (e.g. `debounce`) | A small `useDebouncedValue` hook is enough |

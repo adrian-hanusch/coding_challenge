@@ -70,7 +70,7 @@ erDiagram
 |---|---|---|
 | `Money` | `{ amountMinor, currency }` | Integer cents, e.g. `124900` = €1,249.00 (A8) |
 | `PaymentStatus` | `UNMATCHED`, `ASSIGNED` | The page edits only `UNMATCHED` payments |
-| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` is selectable (A3). The backend decides any status change after assignment (A4). |
+| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` invoices are offered by the search (A3). The backend decides any status change after assignment (A4). |
 | `SplitType` | `PLATFORM_FEE`, `PROVIDER_FEE`, `LOGISTICS_FEE`, `MERCHANT_PAYOUT` | Each type exactly once per assignment |
 
 ## TypeScript types
@@ -121,7 +121,7 @@ interface PaymentAssignment {
 Store only what the user enters. Derive everything else on each render so the values cannot drift apart.
 
 React Aria's `NumberField` parses the input with the active locale's separators (D1) and blocks negative values, so
-the draft holds cents, not raw strings (`ui/src/domain/split.ts`, `ui/src/lib/money.ts`):
+the draft holds cents, not raw strings (`ui/src/domain/split.ts`, `ui/src/domain/money.ts`):
 
 ```ts
 // cents; null = empty field; { tooPrecise } = more than two decimals, kept as typed euros instead of rounded
@@ -132,7 +132,7 @@ interface SplitDraft {
   merchantOverride: AmountInput; // null = use the calculated payout (A1)
 }
 
-// PaymentAssignment state: the invoice, the open modal, plus useSplitDraft(payment.amount) for the split
+// useAssignmentFlow state: the invoice, the open modal, plus useSplitDraft(payment.amount) for the split
 invoice: Invoice | null; // cleared when the server rejects it (INVOICE_NOT_OPEN, INVOICE_NOT_FOUND) and the modal closes
 isConfirming: boolean; // keeps the form mounted while the modal is open, even if a refetch finds the payment ASSIGNED
 draft: SplitDraft;
@@ -143,16 +143,13 @@ const evaluation = evaluateSplit(payment.amount.amountMinor, draft);
 // → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error, validSplit }
 // validSplit: all four amounts once there is no error left, else null (what the modal confirms)
 
-// derived in ConfirmAssignment
-const blockers = assignmentBlockers(invoice, evaluation); // 'invoiceMissing' | 'splitIncomplete' | 'splitUnbalanced'
-
 // local to the confirmation modal, reset on every opening
 isAcknowledged: boolean; // difference to the invoice amount checked (A4)
 ```
 
-The *Review and confirm* button below the steps does not open the modal while `blockers` is not empty. It stays
-focusable (`aria-disabled`) and lists the blockers in a tooltip on hover, focus and press, so touch users can see them
-too. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
+The *Review and confirm* button below the steps is always enabled. It opens the modal once an invoice is selected and
+`validSplit` is set. Otherwise it shows every error at its field (the invoice search, all fees) and moves focus to the
+first problem on the page, or to the split error if no single field is wrong. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
 exactly the amounts shown in it.
 
 An override equal to the calculated payout is stored as `null` (`withMerchantPayout`), so it does not stay as a stale
@@ -186,13 +183,13 @@ Messages are react-intl ICU messages with locale-formatted amounts (D1). The exa
 | Rule | Severity | Basis | Example message |
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
-| Invoice number exists | blocking | Spec: "invalid invoice numbers" | No invoice found for 9999. Check the number or search by merchant. |
-| Each fee is entered (shown after leaving the field; until then it is in the confirm button's tooltip). Fees start empty, so 0 is always a deliberate choice | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
+| Invoice number exists and the invoice is `OPEN` (the search returns only open invoices) | blocking | Spec: "invalid invoice numbers", A3 | No open invoice found for 9999. Check the number or search by merchant. |
+| Each fee is entered (shown after leaving the field or pressing the confirm button). Fees start empty, so 0 is always a deliberate choice | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
 | Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values", D1 | – (the field rejects other characters and negative input, and clamps larger values) |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
 | Σ of all four positions = payment amount, checked once all fields are valid | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
-| Invoice is `OPEN` | blocking | A3 | Invoice 418 is already paid. Select a different invoice. |
+| Invoice is still `OPEN` on the server | blocking | A3 | The invoice is no longer open. Go back and select a different invoice. |
 | Payment amount = invoice amount | warning | A4 | The payment is €50.00 lower than the invoice amount. You can still assign it. You will confirm the difference in the last step. |
 | Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |
 | Payment is still `UNMATCHED` on the server | blocking | A10 | This payment is already assigned. It can no longer be assigned to another invoice. Action: *Show current state* |
@@ -219,8 +216,9 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 
 - `q` matches the invoice number and merchant name, case-insensitive. Max. 100 characters.
 - `customerId` ranks that customer's invoices first and does **not** filter (A5).
-- All statuses are returned, so the UI can tell "not found" from "already paid". Only `OPEN` is selectable (A3).
-- The order is total, so pages never overlap: exact number match, the customer's invoices, `OPEN` first, `dueDate`, `invoiceNumber`.
+- Only `OPEN` invoices are returned, the only ones a payment can be assigned to (A3). A typed number of a paid invoice is
+  therefore reported as not found; the server still rejects an invoice paid in the meantime with `INVOICE_NOT_OPEN`.
+- The order is total, so pages never overlap: exact number match, the customer's invoices, `dueDate`, `invoiceNumber`.
 - Offset pagination: `offset` ≥ 0, `limit` 1–50 (default 10). The response is `{ items, total, offset, limit }`.
 - There is no `sort` parameter. The autocomplete only needs relevance order.
 
