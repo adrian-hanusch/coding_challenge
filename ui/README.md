@@ -21,6 +21,7 @@ Without a global pnpm, prefix every command with `npx`, e.g. `npx pnpm@10 instal
 | `pnpm test`      | Tests with Vitest (`pnpm test:watch` in watch mode)          |
 | `pnpm format`    | Prettier formats all files (`pnpm format:check` only checks) |
 | `pnpm preview`   | Serve the production build locally                           |
+| `pnpm demo`      | Production build with the mock API on http://localhost:4173  |
 
 The `.npmrc` in this folder sets the public npm registry.
 
@@ -32,7 +33,8 @@ Contract and error codes: [docs/data-model.md](../docs/data-model.md#api).
 - Controlled by `VITE_API_MOCKING` in `.env.development` (default `true`). For a real backend, set
   `VITE_API_MOCKING=false` in `.env.development.local`. Vite then proxies `/api` to `API_URL` (default
   `http://localhost:8080`).
-- The mock only runs with `pnpm dev`. `pnpm build` and `pnpm preview` do not contain it.
+- The mock runs with `pnpm dev` and `pnpm demo`. The latter builds with `--mode demo` (`.env.demo`) into `dist-demo/`
+  and serves it. `pnpm build` and `pnpm preview` do not contain the mock.
 - The mock only answers in the browser, not to `curl`. To try it in the browser console:
   `await (await fetch('/api/payments/pay-exact')).json()`.
 - The data lives in memory: a confirmed payment stays assigned until the page is reloaded.

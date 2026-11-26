@@ -173,10 +173,11 @@ original plan.
 - Vitest uses the Vite configuration, so no separate build setup is needed. Its API is compatible with Jest.
 - Unit tests cover the split calculation, the cent conversion, the mapping of server errors, pagination and the mock
   API's search parameters, payment search and invoice search (against the MSW handlers via `setupServer`).
-- A first component test renders the assignment against the MSW handlers in jsdom (React Testing Library, user-event)
-  and checks what a confirm attempt with input missing shows and focuses. Only that file opts into jsdom; the unit
-  tests stay in Node.
-- The rest of the main flow (fees, dialog, server errors) has no component or end-to-end tests yet.
+- A component test renders the assignment against the MSW handlers in jsdom (React Testing Library, user-event). It
+  checks what a confirm attempt with input missing shows and focuses, a successful assignment including the request
+  body in cents, an overridden payout, the acknowledgement of an amount mismatch and server errors. Only that file opts
+  into jsdom; the unit tests stay in Node.
+- Choosing the payment has no component test, and there are no end-to-end tests yet.
 
 ### ESLint + Prettier
 - `typescript-eslint` with the strictest type-aware rule sets (`strictTypeChecked` + `stylisticTypeChecked`).

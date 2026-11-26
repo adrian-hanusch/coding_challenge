@@ -16,6 +16,9 @@ pnpm dev
 Open http://localhost:5173. No backend is needed: a mock API ([MSW](https://mswjs.io)) answers in the browser. A reload
 restores the test data.
 
+To try the production build instead, run `pnpm demo` and open http://localhost:4173. It builds with the mock API
+included and serves the result.
+
 A walk through the main flow:
 
 1. Search for `Max` and choose the payment from Max Mustermann (€1,249.00).
@@ -64,6 +67,7 @@ All commands run in `ui/`:
 | ---------------------------------------------------- | ------------------------------ |
 | `pnpm dev`                                           | Dev server with the mock API   |
 | `pnpm build`                                         | Typecheck and production build |
+| `pnpm demo`                                          | Production build with the mock |
 | `pnpm test`                                          | Unit and component tests       |
 | `pnpm lint` / `pnpm typecheck` / `pnpm format:check` | Static checks                  |
 
@@ -90,8 +94,8 @@ All commands run in `ui/`:
 
 ## Known limitations
 
-- Tests cover the pure logic (split calculation, money conversion, error mapping, mock API) and, as a first component
-  test, the error display when confirming with input missing. Component and end-to-end tests of the rest of the main flow
-  are the next step.
+- Tests cover the pure logic (split calculation, money conversion, error mapping, mock API) and, in a component test,
+  the main flow: confirming with input missing, a successful assignment with the request it sends, an overridden payout,
+  an amount mismatch and server errors. Choosing the payment and end-to-end tests in a real browser are the next step.
 - There is no CI pipeline yet.
 - The REST API is a proposal implemented only as a mock.
