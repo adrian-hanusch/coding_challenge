@@ -2,6 +2,7 @@ import type { Invoice } from '../../../../api/types.ts'
 
 export type InvoiceInputError = { code: 'missing' } | { code: 'notFound'; query: string } | { code: 'searchFailed' }
 
+export const MISSING: InvoiceInputError = { code: 'missing' }
 export const SEARCH_FAILED: InvoiceInputError = { code: 'searchFailed' }
 
 export type InvoiceInputResolution = { invoice: Invoice } | { error: InvoiceInputError }
@@ -15,5 +16,5 @@ export function resolveInvoiceInput(query: string, candidates: readonly Invoice[
 
   if (exact) return { invoice: exact }
   if (candidates.length === 0) return { error: { code: 'notFound', query } }
-  return { error: { code: 'missing' } }
+  return { error: MISSING }
 }

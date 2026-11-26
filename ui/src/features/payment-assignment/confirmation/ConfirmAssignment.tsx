@@ -30,7 +30,7 @@ export function ConfirmAssignment({
   onIncomplete,
   onInvoiceRejected,
 }: ConfirmAssignmentProps) {
-  const { validSplit } = split
+  const ready = invoice && split.validSplit ? { invoice, split: split.validSplit } : null
 
   function close() {
     if (submission.isPending) return
@@ -45,7 +45,7 @@ export function ConfirmAssignment({
     <div className="flex justify-end" data-testid="confirm-assignment">
       <Button
         onPress={() => {
-          if (invoice && validSplit) onConfirmingChange(true)
+          if (ready) onConfirmingChange(true)
           else onIncomplete()
         }}
         className="w-full sm:w-auto"
@@ -53,17 +53,17 @@ export function ConfirmAssignment({
       >
         <FormattedMessage id="confirm.open" />
       </Button>
-      {invoice && validSplit ? (
+      {ready ? (
         <ConfirmAssignmentDialog
           isOpen={isConfirming}
           onClose={close}
           payment={payment}
-          invoice={invoice}
-          split={validSplit}
+          invoice={ready.invoice}
+          split={ready.split}
           isPending={submission.isPending}
           error={submission.error}
           onSubmit={() => {
-            submission.submit({ invoice, split: validSplit })
+            submission.submit(ready)
           }}
         />
       ) : null}

@@ -6,12 +6,9 @@ import react from '@vitejs/plugin-react'
 import { msw } from 'msw/vite'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 
-const DEMO_MODE = 'demo'
-
-// The msw plugin emits no worker in `worker-only` mode, so the demo build copies it next to index.html.
+// The msw plugin emits no worker in `worker-only` mode, so a build with the mock copies it next to index.html.
 const emitMockWorker: Plugin = {
   name: 'emit-mock-worker',
-  apply: (_, { command, mode }) => command === 'build' && mode === DEMO_MODE,
   generateBundle() {
     this.emitFile({
       type: 'asset',
@@ -25,6 +22,8 @@ const emitMockWorker: Plugin = {
 export default defineConfig(({ command, mode }) => {
   // The empty prefix loads all variables, so API_URL from .env*.local works too, not only VITE_*.
   const env = loadEnv(mode, import.meta.dirname, '')
+  // Only .env.development and .env.demo turn it on; a regular build loads neither.
+  const mocking = env.VITE_API_MOCKING === 'true'
 
   return {
     plugins: [
@@ -33,11 +32,11 @@ export default defineConfig(({ command, mode }) => {
       // Serves mockServiceWorker.js in dev only, so neither a generated file in public/ nor a worker in dist/.
       // `worker-only` keeps the stable setupWorker API instead of the experimental `virtual:msw` network.
       { ...msw({ mode: 'worker-only' }), apply: 'serve' },
-      emitMockWorker,
+      command === 'build' && mocking && emitMockWorker,
     ],
     define: {
-      // Being a compile-time constant, the regular build drops the mock entirely; only `--mode demo` keeps it.
-      __MOCK_API__: JSON.stringify(env.VITE_API_MOCKING === 'true' && (command === 'serve' || mode === DEMO_MODE)),
+      // Being a compile-time constant, a build without it drops the mock entirely.
+      __MOCK_API__: JSON.stringify(mocking),
     },
     build: {
       rolldownOptions: {

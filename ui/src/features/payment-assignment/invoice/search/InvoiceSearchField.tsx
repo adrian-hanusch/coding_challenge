@@ -5,7 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl'
 
 import type { Invoice } from '../../../../api/types.ts'
 import { SearchField } from '../../../../components/search/SearchField.tsx'
-import { type InvoiceInputError, SEARCH_FAILED } from './invoiceInput.ts'
+import { type InvoiceInputError, MISSING, SEARCH_FAILED } from './invoiceInput.ts'
 import { InvoiceInputErrorMessage } from './InvoiceInputErrorMessage.tsx'
 import { InvoiceOption } from './InvoiceOption.tsx'
 import { useInvoiceNumberLookup } from './useInvoiceNumberLookup.ts'
@@ -24,8 +24,6 @@ interface InvoiceSearchFieldProps {
   errorRequest: number
   onSelect: (invoice: Invoice) => void
 }
-
-const MISSING: InvoiceInputError = { code: 'missing' }
 
 /** Invoice autocomplete with server-side search. A typed number is resolved with Enter. */
 export function InvoiceSearchField({ customerId, senderName, start, errorRequest, onSelect }: InvoiceSearchFieldProps) {

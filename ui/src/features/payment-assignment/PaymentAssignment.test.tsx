@@ -76,8 +76,6 @@ async function selectInvoice(user: User, invoiceNumber: string) {
   await screen.findByTestId('change-invoice')
 }
 
-const selectInvoice418 = (user: User) => selectInvoice(user, '418')
-
 async function enterFees(user: User, platform: string, provider: string, logistics: string) {
   await user.type(feeInput('PLATFORM_FEE'), platform)
   await user.type(feeInput('PROVIDER_FEE'), provider)
@@ -128,7 +126,7 @@ describe('confirm with input missing', () => {
 
   it('shows every missing fee and focuses the first one', async () => {
     const user = renderAssignment()
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await user.click(confirmButton())
 
     const fees = ['PLATFORM_FEE', 'PROVIDER_FEE', 'LOGISTICS_FEE'].map(feeInput)
@@ -139,7 +137,7 @@ describe('confirm with input missing', () => {
 
   it('focuses the split error when the fees exceed the payment', async () => {
     const user = renderAssignment()
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await user.type(feeInput('PLATFORM_FEE'), '2000')
     await user.type(feeInput('PROVIDER_FEE'), '0')
     await user.type(feeInput('LOGISTICS_FEE'), '0')
@@ -156,7 +154,7 @@ describe('confirm an assignment', () => {
     const onAssigned = vi.fn()
     const user = renderAssignment({ onAssigned })
     const bodies = recordAssignmentRequests()
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await enterFees(user, '10', '5', '2')
 
     expect(payoutInput()).toHaveProperty('value', '1,232.00')
@@ -189,7 +187,7 @@ describe('confirm an assignment', () => {
 
   it('blocks a payout that does not add up until the calculated value is restored', async () => {
     const user = renderAssignment()
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await enterFees(user, '10', '5', '2')
 
     await user.clear(payoutInput())
@@ -235,7 +233,7 @@ describe('confirm an assignment', () => {
     const onAssigned = vi.fn()
     const user = renderAssignment({ onAssigned })
     server.use(http.post(ASSIGNMENT_URL, () => problem(409, 'PAYMENT_ALREADY_ASSIGNED', 'Payment is already assigned')))
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await enterFees(user, '0', '0', '0')
     await user.click(confirmButton())
     await user.click(await screen.findByTestId('confirm-submit'))
@@ -250,7 +248,7 @@ describe('confirm an assignment', () => {
     const onAssigned = vi.fn()
     const user = renderAssignment({ onAssigned })
     server.use(http.post(ASSIGNMENT_URL, () => problem(500, 'INTERNAL_ERROR', 'Internal error'), { once: true }))
-    await selectInvoice418(user)
+    await selectInvoice(user, '418')
     await enterFees(user, '0', '0', '0')
     await user.click(confirmButton())
     await user.click(await screen.findByTestId('confirm-submit'))
