@@ -20,6 +20,23 @@ export default defineConfig(({ command, mode }) => {
       // Same condition as the worker plugin above. Being a compile-time constant, builds drop the mock entirely.
       __MOCK_API__: JSON.stringify(command === 'serve' && env.VITE_API_MOCKING === 'true'),
     },
+    build: {
+      rolldownOptions: {
+        output: {
+          // Libraries change less often than the app, so they stay cached across deploys.
+          codeSplitting: {
+            groups: [
+              { name: 'react', test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/ },
+              {
+                name: 'ui',
+                test: /[\\/]node_modules[\\/](@heroui|react-aria|react-aria-components|react-stately|@react-aria|@react-stately|@react-types|@internationalized|tailwind-variants|tailwind-merge)[\\/]/,
+              },
+              { name: 'vendor', test: /[\\/]node_modules[\\/]/ },
+            ],
+          },
+        },
+      },
+    },
     server: {
       // Only reached with VITE_API_MOCKING=false, otherwise the service worker answers first.
       proxy: { '/api': env.API_URL || 'http://localhost:8080' },
