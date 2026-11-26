@@ -13,10 +13,12 @@ interface InvoiceSelectionProps {
   payment: Payment
   invoice: Invoice | null
   search: InvoiceSearchStart
+  /** Increases with every confirm attempt while input is missing. */
+  errorRequest: number
   onSelect: (invoice: Invoice) => void
 }
 
-export function InvoiceSelection({ payment, invoice, search, onSelect }: InvoiceSelectionProps) {
+export function InvoiceSelection({ payment, invoice, search, errorRequest, onSelect }: InvoiceSelectionProps) {
   const intl = useIntl()
   const alertId = useId()
   const selectionRef = useRef<HTMLDivElement>(null)
@@ -30,6 +32,7 @@ export function InvoiceSelection({ payment, invoice, search, onSelect }: Invoice
         customerId={payment.customerId}
         senderName={payment.senderName}
         start={search}
+        errorRequest={errorRequest}
         onSelect={onSelect}
       />
     )

@@ -33,5 +33,14 @@ export function SplitErrorAlert({ error, paymentAmount }: { error: SplitError; p
       break
   }
 
-  return <Notice status="danger" role="alert" title={title} description={description} data-testid="split-error" />
+  return (
+    <Notice
+      status="danger"
+      role="alert"
+      title={title}
+      description={description}
+      data-focus-on-error
+      data-testid="split-error"
+    />
+  )
 }

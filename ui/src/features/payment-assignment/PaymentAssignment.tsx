@@ -1,5 +1,5 @@
 import { Button } from '@heroui/react'
-import { useId, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Payment } from '../../api/types.ts'
@@ -13,6 +13,9 @@ import { PaymentSummary } from './payment/PaymentSummary.tsx'
 import { AssignmentSteps, type StepState } from './steps/AssignmentSteps.tsx'
 import { useAssignmentFlow } from './useAssignmentFlow.ts'
 
+// An invalid input (React Aria also marks the field's wrapper), or the split error, which belongs to no single field.
+const FIRST_ERROR = 'input[aria-invalid="true"], [data-focus-on-error]'
+
 interface PaymentAssignmentProps {
   payment: Payment
   onChangePayment: () => void
@@ -25,9 +28,15 @@ export function PaymentAssignment({ payment, onChangePayment, onAssigned }: Paym
   const flow = useAssignmentFlow(payment, onAssigned)
   const { invoice, split, isEditable } = flow
   const assignedNoticeRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
 
   // The form and the dialog's trigger just unmounted, so focus would otherwise fall back to the page body.
   useFocusWhen(assignedNoticeRef, !isEditable)
+
+  // After a confirm attempt with input missing, the first problem in page order gets the focus.
+  useEffect(() => {
+    if (flow.errorRequest > 0) pageRef.current?.querySelector<HTMLElement>(FIRST_ERROR)?.focus()
+  }, [flow.errorRequest])
 
   if (flow.isAssigned) return null
 
@@ -42,6 +51,7 @@ export function PaymentAssignment({ payment, onChangePayment, onAssigned }: Paym
               payment={payment}
               invoice={invoice}
               search={flow.invoiceSearch}
+              errorRequest={flow.errorRequest}
               onSelect={flow.selectInvoice}
             />
           ),
@@ -67,7 +77,7 @@ export function PaymentAssignment({ payment, onChangePayment, onAssigned }: Paym
     : { status: 'locked' }
 
   return (
-    <Page title={<FormattedMessage id={isEditable ? 'assign.title' : 'assign.assignedTitle'} />}>
+    <Page ref={pageRef} title={<FormattedMessage id={isEditable ? 'assign.title' : 'assign.assignedTitle'} />}>
       <AssignmentSteps
         payment={{
           status: 'done',
@@ -91,6 +101,7 @@ export function PaymentAssignment({ payment, onChangePayment, onAssigned }: Paym
           submission={flow.submission}
           isConfirming={flow.isConfirming}
           onConfirmingChange={flow.setIsConfirming}
+          onIncomplete={flow.showErrors}
           onInvoiceRejected={flow.rejectInvoice}
         />
       ) : null}

@@ -17,6 +17,7 @@ const EMPTY_SEARCH: InvoiceSearchStart = { text: '', autoFocus: false }
 export function useAssignmentFlow(payment: Payment, onAssigned: () => void) {
   const [{ invoice, search }, setInvoiceChoice] = useState<InvoiceChoice>({ invoice: null, search: EMPTY_SEARCH })
   const [isConfirming, setIsConfirming] = useState(false)
+  const [errorRequest, setErrorRequest] = useState(0)
   const split = useSplitDraft(payment.amount)
   const { submission, isAssigned } = useAssignPayment(payment, onAssigned)
 
@@ -29,6 +30,13 @@ export function useAssignmentFlow(payment: Payment, onAssigned: () => void) {
     isAssigned,
     isConfirming,
     setIsConfirming,
+    /** Counts the attempts to confirm with input missing; each one shows every error. */
+    errorRequest,
+    showErrors: () => {
+      // Without an invoice the fees are still locked, so their errors would greet the user once the step opens.
+      if (invoice) split.touchAllFees()
+      setErrorRequest((count) => count + 1)
+    },
     // A refetch that finds the payment assigned must not pull the open dialog away; submitting then reports it.
     isEditable: payment.status === 'UNMATCHED' || isConfirming,
     selectInvoice: (next: Invoice) => {

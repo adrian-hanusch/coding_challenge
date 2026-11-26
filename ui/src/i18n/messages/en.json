@@ -68,7 +68,6 @@
   "confirm.section.payment": "Payment details",
   "confirm.section.invoice": "Invoice details",
   "confirm.section.split": "Payment split",
-  "confirm.blocker": "{blocker, select, invoiceMissing {Select the invoice the payment belongs to.} splitIncomplete {Enter all fees (at most two decimal places each).} splitUnbalanced {Correct the split so it adds up to the payment.} other {{blocker}}}",
   "confirm.open": "Review and confirm",
   "confirm.title": "Confirm assignment",
   "confirm.description": "Check every amount once more. After you confirm, the payment cannot be assigned to another invoice.",

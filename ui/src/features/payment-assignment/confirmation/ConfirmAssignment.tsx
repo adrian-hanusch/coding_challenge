@@ -1,8 +1,7 @@
+import { Button } from '@heroui/react'
 import { FormattedMessage } from 'react-intl'
 
 import type { Invoice, Payment } from '../../../api/types.ts'
-import { BlockableButton } from '../../../components/BlockableButton.tsx'
-import { type AssignmentBlocker, assignmentBlockers } from '../../../domain/assignment.ts'
 import type { SplitEvaluation } from '../../../domain/split.ts'
 import { isInvoiceRejected } from './assignmentFailure.ts'
 import { ConfirmAssignmentDialog } from './ConfirmAssignmentDialog.tsx'
@@ -15,6 +14,8 @@ interface ConfirmAssignmentProps {
   submission: AssignmentSubmission
   isConfirming: boolean
   onConfirmingChange: (isConfirming: boolean) => void
+  /** Called on a press while input is missing, instead of opening the dialog. */
+  onIncomplete: () => void
   /** Called when the server rejected the selected invoice and the dialog is closed. */
   onInvoiceRejected: () => void
 }
@@ -26,10 +27,10 @@ export function ConfirmAssignment({
   submission,
   isConfirming,
   onConfirmingChange,
+  onIncomplete,
   onInvoiceRejected,
 }: ConfirmAssignmentProps) {
   const { validSplit } = split
-  const blockers = assignmentBlockers(invoice, split)
 
   function close() {
     if (submission.isPending) return
@@ -42,16 +43,16 @@ export function ConfirmAssignment({
 
   return (
     <div className="flex justify-end" data-testid="confirm-assignment">
-      <BlockableButton
-        blockedReason={blockers.length > 0 ? <BlockerList blockers={blockers} /> : null}
+      <Button
         onPress={() => {
-          onConfirmingChange(true)
+          if (invoice && validSplit) onConfirmingChange(true)
+          else onIncomplete()
         }}
         className="w-full sm:w-auto"
         data-testid="confirm-open"
       >
         <FormattedMessage id="confirm.open" />
-      </BlockableButton>
+      </Button>
       {invoice && validSplit ? (
         <ConfirmAssignmentDialog
           isOpen={isConfirming}
@@ -67,18 +68,5 @@ export function ConfirmAssignment({
         />
       ) : null}
     </div>
-  )
-}
-
-function BlockerList({ blockers }: { blockers: AssignmentBlocker[] }) {
-  if (blockers.length === 1) return <FormattedMessage id="confirm.blocker" values={{ blocker: blockers[0] }} />
-  return (
-    <ul className="flex list-disc flex-col gap-1 ps-4">
-      {blockers.map((blocker) => (
-        <li key={blocker}>
-          <FormattedMessage id="confirm.blocker" values={{ blocker }} />
-        </li>
-      ))}
-    </ul>
   )
 }

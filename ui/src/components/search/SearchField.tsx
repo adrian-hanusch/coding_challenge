@@ -26,7 +26,7 @@ interface SearchFieldProps<T extends object> extends Pick<
   searchErrorAction?: ReactNode
   emptyMessage: ReactNode
   search: PagedSearch
-  input?: Pick<InputProps, 'autoFocus' | 'onKeyDown'>
+  input?: Pick<InputProps, 'ref' | 'autoFocus' | 'onKeyDown'>
   /** The list content: options, or sections of options. */
   children: ReactNode
   'data-testid': string
@@ -58,7 +58,8 @@ export function SearchField<T extends object>({
     <ComboBox<T>
       {...comboBox}
       fullWidth
-      menuTrigger="focus"
+      // Focus moved to an invalid field should show the error, not cover it with the list; typing still opens it.
+      menuTrigger={inputError == null ? 'focus' : 'input'}
       allowsEmptyCollection
       isInvalid={hasError}
       data-testid={testId}

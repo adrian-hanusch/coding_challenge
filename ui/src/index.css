@@ -28,9 +28,9 @@
     border-width: 0;
   }
 
-  .tooltip {
-    word-break: normal;
-    overflow-wrap: anywhere;
+  /* The combo box's own focus rule comes after the invalid ring of the input, so a focused invalid field turned petrol. */
+  .combo-box [data-slot='input'][data-invalid='true']:focus {
+    @apply ring-danger;
   }
 
   .modal__heading {

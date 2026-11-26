@@ -4,6 +4,7 @@ import type { Money } from '../../../api/types.ts'
 import type { AmountInput } from '../../../domain/money.ts'
 import {
   evaluateSplit,
+  FEE_TYPES,
   type FeeType,
   INITIAL_SPLIT_DRAFT,
   type SplitDraft,
@@ -29,6 +30,9 @@ export function useSplitDraft(paymentAmount: Money) {
     },
     touchFee: (type: FeeType) => {
       setTouchedFees((current) => (current.has(type) ? current : new Set(current).add(type)))
+    },
+    touchAllFees: () => {
+      setTouchedFees(new Set(FEE_TYPES))
     },
   }
 }

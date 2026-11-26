@@ -68,7 +68,6 @@
   "confirm.section.payment": "Zahlungsdetails",
   "confirm.section.invoice": "Rechnungsdetails",
   "confirm.section.split": "Aufteilung",
-  "confirm.blocker": "{blocker, select, invoiceMissing {Wählen Sie die Rechnung, zu der die Zahlung gehört.} splitIncomplete {Geben Sie alle Gebühren ein (je höchstens zwei Nachkommastellen).} splitUnbalanced {Korrigieren Sie die Aufteilung, sodass sie den Zahlungsbetrag ergibt.} other {{blocker}}}",
   "confirm.open": "Prüfen und bestätigen",
   "confirm.title": "Zuordnung bestätigen",
   "confirm.description": "Prüfen Sie alle Beträge noch einmal. Nach der Bestätigung lässt sich die Zahlung keiner anderen Rechnung mehr zuordnen.",
