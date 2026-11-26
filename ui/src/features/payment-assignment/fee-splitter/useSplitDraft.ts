@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import type { Money } from '../../../api/types.ts'
+import type { AmountInput } from '../../../domain/money.ts'
 import {
   evaluateSplit,
   type FeeType,
@@ -9,7 +10,6 @@ import {
   withFee,
   withMerchantPayout,
 } from '../../../domain/split.ts'
-import type { AmountInput } from '../../../lib/money.ts'
 
 /** Entered split, its evaluation and which fee errors are shown. Updaters keep changes of one event from overwriting each other. */
 export function useSplitDraft(paymentAmount: Money) {

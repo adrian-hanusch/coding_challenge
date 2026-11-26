@@ -1,5 +1,5 @@
 import { SPLIT_TYPES, type SplitType } from '../api/types.ts'
-import { type AmountInput, isTooPrecise } from '../lib/money.ts'
+import { type AmountInput, isTooPrecise } from './money.ts'
 
 export type FeeType = Exclude<SplitType, 'MERCHANT_PAYOUT'>
 export const FEE_TYPES = SPLIT_TYPES.filter((type): type is FeeType => type !== 'MERCHANT_PAYOUT')

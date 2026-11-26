@@ -3,8 +3,8 @@ import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
 import { MoneyField } from '../../../components/MoneyField.tsx'
+import type { AmountInput } from '../../../domain/money.ts'
 import { FEE_TYPES, type SplitEvaluation, type SplitFieldError } from '../../../domain/split.ts'
-import type { AmountInput } from '../../../lib/money.ts'
 import { SplitErrorAlert } from './SplitErrorAlert.tsx'
 import type { SplitDraftState } from './useSplitDraft.ts'
 
