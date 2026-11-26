@@ -40,13 +40,13 @@ Related assumptions, decisions and open questions are in [assumptions.md](assump
 
 ### pnpm
 - Fast, with strict dependency resolution: undeclared packages cannot be imported.
-- The required version is in `devEngines.packageManager` in `package.json` (`^12.11.2`). An older pnpm aborts
-  `pnpm install`.
+- `devEngines.packageManager` in `package.json` asks for pnpm 10 or newer and only warns otherwise. `engines` asks for
+  Node.js 22.22 or newer, the lowest version all dependencies support. The lockfile installs unchanged with pnpm 10.
 - `pnpm-lock.yaml` pins the exact versions. `pnpm install --frozen-lockfile` enforces them, so every reviewer gets the
   same dependencies.
 - The usual `packageManager` field is **not** used: with it, pnpm downloads and switches to that exact version on its
-  own, through the global registry configuration, which not every network allows. Corepack does not read `devEngines`,
-  so pnpm 12 is installed globally or run through `npx` (see `ui/README.md`).
+  own, through the global registry configuration, which not every network allows. Any pnpm from 10 on works, installed
+  globally or run through `npx` (see `ui/README.md`).
 - `pnpm-workspace.yaml` allows msw 3 for `@vitest/mocker`, which still names msw 2 as its peer. It only uses msw for
   Vitest's browser mode, which this project does not use.
 

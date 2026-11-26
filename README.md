@@ -5,7 +5,7 @@ The task is in [docs/Payment Management Interface.md](docs/Payment%20Management%
 
 ## Quick start
 
-Requires Node.js 24 and pnpm 12 (details in [ui/README.md](ui/README.md#requirements)).
+Requires Node.js 22.22+ and pnpm 10+ (details in [ui/README.md](ui/README.md#requirements)).
 
 ```sh
 cd ui

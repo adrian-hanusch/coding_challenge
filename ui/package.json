@@ -53,11 +53,14 @@
     "vite": "^8.3.0",
     "vitest": "^4.1.12"
   },
+  "engines": {
+    "node": ">=22.22"
+  },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^12.11.2",
-      "onFail": "error"
+      "version": ">=10",
+      "onFail": "warn"
     }
   }
 }

@@ -4,12 +4,10 @@ Frontend of the coding challenge. Stack and reasons: [docs/libraries.md](../docs
 
 ## Requirements
 
-- Node.js 24
-- pnpm 12, e.g. through Corepack: `corepack enable pnpm && corepack install -g pnpm@12`
+- Node.js 22.22 or newer (24 recommended, see `.nvmrc`)
+- pnpm 10 or newer, e.g. through Corepack: `corepack enable pnpm`
 
-The required pnpm version is in `devEngines.packageManager` in `package.json`. Corepack does not read this field, so
-pnpm 12 has to be installed globally. With an older version `pnpm install` aborts with an error message. Without a
-global install, prefix every command with `npx`, e.g. `npx pnpm@12 install` and `npx pnpm@12 dev`.
+Without a global pnpm, prefix every command with `npx`, e.g. `npx pnpm@10 install` and `npx pnpm@10 dev`.
 
 ## Commands
 
