@@ -21,20 +21,19 @@ function parseSearch(searchParams: URLSearchParams): { search: InvoiceSearch } |
 }
 
 /**
- * Matches invoice number and merchant name. Returns all statuses, so the UI can tell
- * "not found" from "already paid". The order is total, so pages never overlap:
- * exact number match, the customer's invoices, OPEN first, due date, invoice number.
+ * Matches invoice number and merchant name of open invoices, the only ones a payment can be assigned to.
+ * The order is total, so pages never overlap: exact number match, the customer's invoices, due date, invoice number.
  */
 function searchInvoices(invoices: readonly Invoice[], search: InvoiceSearch): Page<Invoice> {
   const { customerId } = search
   const needle = search.q.toLowerCase()
-  // The three ranking flags as one number, most significant first.
+  // The two ranking flags as one number, most significant first.
   const rank = (invoice: Invoice) =>
-    (invoice.invoiceNumber.toLowerCase() === needle ? 0 : 4) +
-    (customerId !== null && invoice.customerId === customerId ? 0 : 2) +
-    (invoice.status === 'OPEN' ? 0 : 1)
+    (invoice.invoiceNumber.toLowerCase() === needle ? 0 : 2) +
+    (customerId !== null && invoice.customerId === customerId ? 0 : 1)
 
   const matches = invoices
+    .filter((invoice) => invoice.status === 'OPEN')
     .filter(
       (invoice) =>
         needle === '' ||

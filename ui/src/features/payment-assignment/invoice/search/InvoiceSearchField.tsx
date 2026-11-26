@@ -57,7 +57,6 @@ export function InvoiceSearchField({ customerId, senderName, start, onSelect }: 
       allowsEmptyCollection
       isInvalid={error !== null}
       items={search.invoices}
-      disabledKeys={search.disabledKeys}
       inputValue={text}
       onInputChange={changeText}
       onChange={(key) => {
