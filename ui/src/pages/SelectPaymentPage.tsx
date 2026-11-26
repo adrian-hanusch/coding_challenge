@@ -1,16 +1,20 @@
 import { FormattedMessage } from 'react-intl'
-import { useLocation } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
-import { AFTER_ASSIGNMENT, CHANGE_PAYMENT } from '../app/paths.ts'
+import { assignPaymentPath, selectPaymentReason } from '../app/paths.ts'
 import { Page } from '../components/Page.tsx'
 import { PaymentSelection } from '../features/payment-assignment/PaymentSelection.tsx'
 
 export function SelectPaymentPage() {
-  const location = useLocation()
+  const navigate = useNavigate()
+  const reason = selectPaymentReason(useLocation().state)
 
   return (
-    <Page title={<FormattedMessage id="assign.title" />} focusTitle={location.state === AFTER_ASSIGNMENT}>
-      <PaymentSelection autoFocusSearch={location.state === CHANGE_PAYMENT} />
+    <Page title={<FormattedMessage id="assign.title" />} focusTitle={reason === 'afterAssignment'}>
+      <PaymentSelection
+        autoFocusSearch={reason === 'changePayment'}
+        onSelect={(paymentId) => void navigate(assignPaymentPath(paymentId))}
+      />
     </Page>
   )
 }

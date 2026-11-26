@@ -1,6 +1,7 @@
 import { cn } from '@heroui/react'
-import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react'
+import { type ComponentProps, type ReactNode, useRef } from 'react'
 
+import { useFocusWhen } from '../lib/useFocusWhen.ts'
 import { Typography } from './Typography.tsx'
 
 interface PageProps extends Omit<ComponentProps<'div'>, 'title'> {
@@ -13,12 +14,10 @@ interface PageProps extends Omit<ComponentProps<'div'>, 'title'> {
 export function Page({ title, description, focusTitle = false, className, children, ...props }: PageProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
 
-  useEffect(() => {
-    if (focusTitle) titleRef.current?.focus()
-  }, [focusTitle])
+  useFocusWhen(titleRef, focusTitle, { onMount: true })
 
   return (
-    <div {...props} className={cn('mx-auto flex w-full max-w-3xl flex-col gap-8', className)}>
+    <div {...props} className={cn('mx-auto flex max-w-3xl flex-col gap-8', className)}>
       <div className="flex flex-col gap-1">
         <Typography type="h3" elementType="h1" ref={titleRef} tabIndex={-1} className="outline-none">
           {title}

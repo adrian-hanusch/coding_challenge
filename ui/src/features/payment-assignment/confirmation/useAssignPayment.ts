@@ -15,12 +15,21 @@ interface AssignVariables {
   split: CompleteSplit
 }
 
-export function useAssignPayment(payment: Payment) {
+/** What the confirmation needs from the request, independent of how it is sent. */
+export interface AssignmentSubmission {
+  isPending: boolean
+  /** Of the last attempt, until `reset`. */
+  error: Error | null
+  submit: (variables: AssignVariables) => void
+  reset: () => void
+}
+
+export function useAssignPayment(payment: Payment, onAssigned: () => void) {
   const queryClient = useQueryClient()
   const intl = useIntl()
   const formatMoney = useFormatMoney()
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({ invoice, split }: AssignVariables) =>
       createAssignment(payment.id, {
         invoiceId: invoice.id,
@@ -47,6 +56,15 @@ export function useAssignPayment(payment: Payment) {
       if (isInvoiceRejected(error)) void queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
     },
   })
-}
 
-export type AssignPaymentMutation = ReturnType<typeof useAssignPayment>
+  const submission: AssignmentSubmission = {
+    isPending: mutation.isPending,
+    error: mutation.error,
+    // Per-call callbacks are skipped once the page has unmounted, so a user who already left is not redirected.
+    submit: (variables) => {
+      mutation.mutate(variables, { onSuccess: onAssigned })
+    },
+    reset: mutation.reset,
+  }
+  return { submission, isAssigned: mutation.isSuccess }
+}

@@ -12,13 +12,15 @@ import { PaymentSummary } from '../payment/PaymentSummary.tsx'
 import { AssignmentErrorAlert } from './AssignmentErrorAlert.tsx'
 import { isRetryable } from './assignmentFailure.ts'
 import { SplitBreakdown } from './SplitBreakdown.tsx'
-import type { AssignPaymentMutation } from './useAssignPayment.ts'
 
 interface DialogContentProps {
   payment: Payment
   invoice: Invoice
   split: CompleteSplit
-  assign: AssignPaymentMutation
+  isPending: boolean
+  /** Of the last attempt. */
+  error: Error | null
+  onSubmit: () => void
 }
 
 interface ConfirmAssignmentDialogProps extends DialogContentProps {
@@ -27,7 +29,7 @@ interface ConfirmAssignmentDialogProps extends DialogContentProps {
 }
 
 export function ConfirmAssignmentDialog({ isOpen, onClose, ...content }: ConfirmAssignmentDialogProps) {
-  const isPending = content.assign.isPending
+  const { isPending } = content
 
   return (
     <Modal.Backdrop
@@ -47,14 +49,14 @@ export function ConfirmAssignmentDialog({ isOpen, onClose, ...content }: Confirm
   )
 }
 
-function DialogContent({ payment, invoice, split, assign }: DialogContentProps) {
+function DialogContent({ payment, invoice, split, isPending, error, onSubmit }: DialogContentProps) {
   const difference = invoiceDifference(payment.amount, invoice)
   const [isAcknowledged, setIsAcknowledged] = useState(false)
   const [hasTriedConfirm, setHasTriedConfirm] = useState(false)
 
   function confirm() {
     setHasTriedConfirm(true)
-    if (difference === 0 || isAcknowledged) assign.mutate({ invoice, split })
+    if (difference === 0 || isAcknowledged) onSubmit()
   }
 
   return (
@@ -85,22 +87,22 @@ function DialogContent({ payment, invoice, split, assign }: DialogContentProps) 
               difference={difference}
               isAcknowledged={isAcknowledged}
               showError={hasTriedConfirm && !isAcknowledged}
-              isDisabled={assign.isPending}
+              isDisabled={isPending}
               onChange={setIsAcknowledged}
             />
           )}
         </SummarySection>
 
-        {assign.error ? <AssignmentErrorAlert error={assign.error} /> : null}
+        {error ? <AssignmentErrorAlert error={error} /> : null}
       </Modal.Body>
 
       <Modal.Footer className="flex-col-reverse sm:flex-row">
-        <Button slot="close" variant="tertiary" isDisabled={assign.isPending} className="w-full sm:w-auto">
+        <Button slot="close" variant="tertiary" isDisabled={isPending} className="w-full sm:w-auto">
           <FormattedMessage id="confirm.cancel" />
         </Button>
         <Button
-          isPending={assign.isPending}
-          isDisabled={assign.error ? !isRetryable(assign.error) : false}
+          isPending={isPending}
+          isDisabled={error ? !isRetryable(error) : false}
           onPress={confirm}
           className="w-full sm:w-auto"
           data-testid="confirm-submit"

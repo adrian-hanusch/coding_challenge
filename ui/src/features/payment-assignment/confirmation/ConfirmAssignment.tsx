@@ -6,13 +6,13 @@ import { type AssignmentBlocker, assignmentBlockers } from '../../../domain/assi
 import type { SplitEvaluation } from '../../../domain/split.ts'
 import { isInvoiceRejected } from './assignmentFailure.ts'
 import { ConfirmAssignmentDialog } from './ConfirmAssignmentDialog.tsx'
-import type { AssignPaymentMutation } from './useAssignPayment.ts'
+import type { AssignmentSubmission } from './useAssignPayment.ts'
 
 interface ConfirmAssignmentProps {
   payment: Payment
   invoice: Invoice | null
   split: SplitEvaluation
-  assign: AssignPaymentMutation
+  submission: AssignmentSubmission
   isConfirming: boolean
   onConfirmingChange: (isConfirming: boolean) => void
   /** Called when the server rejected the selected invoice and the dialog is closed. */
@@ -23,20 +23,21 @@ export function ConfirmAssignment({
   payment,
   invoice,
   split,
-  assign,
+  submission,
   isConfirming,
   onConfirmingChange,
   onInvoiceRejected,
 }: ConfirmAssignmentProps) {
+  const { validSplit } = split
   const blockers = assignmentBlockers(invoice, split)
 
   function close() {
-    if (assign.isPending) return
+    if (submission.isPending) return
     onConfirmingChange(false)
     // Cleared only on close: clearing while open would unmount the dialog together with its error message.
-    if (assign.error && isInvoiceRejected(assign.error)) onInvoiceRejected()
+    if (submission.error && isInvoiceRejected(submission.error)) onInvoiceRejected()
     // An error belongs to the last attempt and should not greet the next opening.
-    assign.reset()
+    submission.reset()
   }
 
   return (
@@ -51,14 +52,18 @@ export function ConfirmAssignment({
       >
         <FormattedMessage id="confirm.open" />
       </BlockableButton>
-      {invoice && split.validSplit ? (
+      {invoice && validSplit ? (
         <ConfirmAssignmentDialog
           isOpen={isConfirming}
           onClose={close}
           payment={payment}
           invoice={invoice}
-          split={split.validSplit}
-          assign={assign}
+          split={validSplit}
+          isPending={submission.isPending}
+          error={submission.error}
+          onSubmit={() => {
+            submission.submit({ invoice, split: validSplit })
+          }}
         />
       ) : null}
     </div>
