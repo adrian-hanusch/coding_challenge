@@ -79,6 +79,8 @@
   "assignment.success.toast": "Zahlung über {amount} von {sender} der Rechnung {number} zugeordnet.",
   "assignment.error.alreadyAssigned": "Diese Zahlung ist bereits zugeordnet.",
   "assignment.error.alreadyAssigned.description": "Sie kann keiner anderen Rechnung mehr zugeordnet werden.",
+  "assignment.error.paymentNotFound": "Die Zahlung existiert nicht mehr.",
+  "assignment.error.paymentNotFound.description": "Gehen Sie zurück und wählen Sie eine andere Zahlung.",
   "assignment.error.invoiceNotOpen": "Die Rechnung ist nicht mehr offen.",
   "assignment.error.invoiceNotOpen.description": "Gehen Sie zurück und wählen Sie eine andere Rechnung.",
   "assignment.error.invoiceNotFound": "Die Rechnung existiert nicht mehr.",

@@ -79,6 +79,8 @@
   "assignment.success.toast": "Payment of {amount} from {sender} assigned to invoice {number}.",
   "assignment.error.alreadyAssigned": "This payment is already assigned.",
   "assignment.error.alreadyAssigned.description": "It can no longer be assigned to another invoice.",
+  "assignment.error.paymentNotFound": "The payment no longer exists.",
+  "assignment.error.paymentNotFound.description": "Go back and choose another payment.",
   "assignment.error.invoiceNotOpen": "The invoice is no longer open.",
   "assignment.error.invoiceNotOpen.description": "Go back and select a different invoice.",
   "assignment.error.invoiceNotFound": "The invoice no longer exists.",
