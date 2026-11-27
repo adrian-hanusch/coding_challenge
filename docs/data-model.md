@@ -1,6 +1,6 @@
 # Data Model
 
-Data model for the Payment Management Interface described in [Payment Management Interface.md](./Payment%20Management%20Interface.md). References like `A3` point to [assumptions.md](./assumptions.md).
+Data model for the Payment Management Interface described in [Payment Management Interface.md](./Payment%20Management%20Interface.md).
 
 ## Entities
 
@@ -9,7 +9,7 @@ erDiagram
     MERCHANT ||--o{ INVOICE : issues
     CUSTOMER ||--o{ INVOICE : owes
     CUSTOMER |o--o{ PAYMENT : sends
-    INVOICE ||--o| PAYMENT_ASSIGNMENT : "target (A3)"
+    INVOICE ||--o| PAYMENT_ASSIGNMENT : target
     PAYMENT ||--o| PAYMENT_ASSIGNMENT : source
     PAYMENT_ASSIGNMENT ||--|{ PAYMENT_SPLIT : "splits into (exactly 4)"
 
@@ -26,9 +26,9 @@ erDiagram
         uuid id PK
         string invoiceNumber UK
         uuid merchantId FK
-        uuid customerId FK "A5"
+        uuid customerId FK
         Money amount
-        InvoiceStatus status "A3"
+        InvoiceStatus status
         date dueDate
     }
     PAYMENT {
@@ -36,14 +36,14 @@ erDiagram
         Money amount
         string senderName
         string referenceNumber
-        uuid customerId FK "nullable, A5"
+        uuid customerId FK "nullable"
         datetime receivedAt
         PaymentStatus status
     }
     PAYMENT_ASSIGNMENT {
         uuid id PK
         uuid paymentId FK, UK
-        uuid invoiceId FK, UK "unique per A3"
+        uuid invoiceId FK, UK "one payment per invoice"
     }
     PAYMENT_SPLIT {
         uuid id PK
@@ -58,7 +58,7 @@ erDiagram
 | `Payment` | Incoming payment without an automatic invoice match. The starting point of the page. |
 | `Invoice` | Claim against a customer, issued by a merchant. The assignment target. |
 | `Merchant` | Issues invoices and receives the `MERCHANT_PAYOUT` split. |
-| `Customer` | The sender found in the database (A5). |
+| `Customer` | The sender found in the database. |
 | `PaymentAssignment` | Created on confirmation. Links one payment to one invoice. |
 | `PaymentSplit` | One of the four positions of an assignment. |
 
@@ -68,22 +68,22 @@ erDiagram
 
 | Type | Values | Notes |
 |---|---|---|
-| `Money` | `{ amountMinor, currency }` | Integer cents, e.g. `124900` = €1,249.00 (A8) |
+| `Money` | `{ amountMinor, currency }` | Integer cents, e.g. `124900` = €1,249.00. Only EUR |
 | `PaymentStatus` | `UNMATCHED`, `ASSIGNED` | The page edits only `UNMATCHED` payments |
-| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` invoices are offered by the search (A3). An assignment sets the invoice to `PAID`, also when the amounts differ (A3, A4). |
+| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` invoices are offered by the search. An assignment sets the invoice to `PAID`, also when the amounts differ. |
 | `SplitType` | `PLATFORM_FEE`, `PROVIDER_FEE`, `LOGISTICS_FEE`, `MERCHANT_PAYOUT` | Each type exactly once per assignment |
 
 ## TypeScript types
 
 The API types live in [`ui/src/api/types.ts`](../ui/src/api/types.ts). Unlike the entity, the API `Invoice` carries
 `merchant: { id, name }` instead of `merchantId`, so search results and the confirmation modal need no second request.
-`invoiceNumber` is a plain string such as `"418"` (A9).
+`invoiceNumber` is a plain string such as `"418"`, without a format check.
 
 ## Frontend state
 
 Store only what the user enters. Derive everything else on each render so the values cannot drift apart.
 
-React Aria's `NumberField` parses the input with the active locale's separators (D1) and blocks negative values, so
+React Aria's `NumberField` parses the input with the active locale's separators and blocks negative values, so
 the draft holds cents, not raw strings (`ui/src/domain/split.ts`, `ui/src/domain/money.ts`):
 
 ```ts
@@ -92,7 +92,7 @@ type AmountInput = number | null | { tooPrecise: number };
 
 interface SplitDraft {
   fees: Record<'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE', AmountInput>; // start empty
-  merchantOverride: AmountInput; // null = use the calculated payout (A1); an override equal to it is stored as null
+  merchantOverride: AmountInput; // null = use the calculated payout; an override equal to it is stored as null
 }
 
 // derived on each render, never stored
@@ -124,29 +124,29 @@ difference      = payment − (platformFee + providerFee + logisticsFee + mercha
 
 ## Validation
 
-Messages are react-intl ICU messages with locale-formatted amounts (D1). The examples are shown in `en`.
+Messages are react-intl ICU messages with locale-formatted amounts. The examples are shown in `en`.
 
 | Rule | Severity | Basis | Example message |
 |---|---|---|---|
 | Invoice is provided | blocking | Spec: "missing data" | Enter an invoice number or select an invoice from the list. |
-| Invoice number exists and the invoice is `OPEN` (the search returns only open invoices) | blocking | Spec: "invalid invoice numbers", A3 | No open invoice found for 9999. Check the number or search by merchant. |
+| Invoice number exists and the invoice is `OPEN` (the search returns only open invoices) | blocking | Spec: "invalid invoice numbers" | No open invoice found for 9999. Check the number or search by merchant. |
 | Each fee is entered (shown after leaving the field or pressing the confirm button). Fees start empty, so 0 is always a deliberate choice | blocking | Spec: "missing data" | Enter the fee. Use 0 if there is none. |
-| Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values", D1 | – (the field rejects other characters and negative input, and clamps larger values) |
+| Each amount is a number in the active locale, ≥ 0 and ≤ €1,000,000,000 | prevented | Spec: "correct data types and values" | – (the field rejects other characters and negative input, and clamps larger values) |
 | At most 2 decimal places | blocking | Derived: the cent is the smallest EUR unit | Amounts can have at most two decimal places. |
 | Σ fees ≤ payment amount | blocking | Spec: "incorrect fee calculations" | The fees exceed the payment amount by €12.40. |
 | Σ of all four positions = payment amount, checked once all fields are valid | blocking | Spec: "incorrect fee calculations" | The split totals €1,240.00 but the payment is €1,249.00 (€9.00 missing). Action: *Use calculated value* |
-| Invoice is still `OPEN` on the server | blocking | A3 | The invoice is no longer open. Go back and select a different invoice. |
-| Payment amount = invoice amount | warning | A4 | The payment is €50.00 lower than the invoice amount. You can still assign it. You will confirm the difference in the last step. |
-| Mismatch acknowledged in the modal | blocking | A4 | Confirm that you have checked the €50.00 difference. |
-| Payment is still `UNMATCHED` on the server | blocking | A10 | This payment is already assigned. It can no longer be assigned to another invoice. Action: *Show current state* |
+| Invoice is still `OPEN` on the server | blocking | Derived: one payment per invoice | The invoice is no longer open. Go back and select a different invoice. |
+| Payment amount = invoice amount | warning | Derived: a different amount is legitimate but easy to choose by mistake | The payment is €50.00 lower than the invoice amount. You can still assign it. You will confirm the difference in the last step. |
+| Mismatch acknowledged in the modal | blocking | Derived: the difference is confirmed explicitly | Confirm that you have checked the €50.00 difference. |
+| Payment is still `UNMATCHED` on the server | blocking | Derived: an assignment is final | This payment is already assigned. It can no longer be assigned to another invoice. Action: *Show current state* |
 
 ## API
 
-Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during development. All paths are relative to `/api`.
+Proposed contract, served by the MSW mock in `ui/src/mocks/` during development. All paths are relative to `/api`.
 
 | Endpoint | Response | Purpose |
 |---|---|---|
-| `GET /payments?q=&status=UNMATCHED&offset=0&limit=10` | `Page<Payment>` | Choose the payment in the first step (A12) |
+| `GET /payments?q=&status=UNMATCHED&offset=0&limit=10` | `Page<Payment>` | Choose the payment in the first step |
 | `GET /payments/{paymentId}` | `Payment` | Load the payment, also when it is already `ASSIGNED` |
 | `GET /invoices?q=&customerId=&offset=0&limit=10` | `Page<Invoice>` | Autocomplete and lookup of a typed invoice number |
 | `POST /payments/{paymentId}/assignment` | `201 PaymentAssignment` (`200` for a repeat) | Confirm the assignment with all four splits |
@@ -161,8 +161,8 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 ### Invoice search
 
 - `q` matches the invoice number and merchant name, case-insensitive. Max. 100 characters.
-- `customerId` ranks that customer's invoices first and does **not** filter (A5).
-- Only `OPEN` invoices are returned, the only ones a payment can be assigned to (A3). A typed number of a paid invoice is
+- `customerId` ranks that customer's invoices first and does **not** filter.
+- Only `OPEN` invoices are returned, the only ones a payment can be assigned to. A typed number of a paid invoice is
   therefore reported as not found; the server still rejects an invoice paid in the meantime with `INVOICE_NOT_OPEN`.
 - The order is total, so pages never overlap: exact number match, the customer's invoices, `dueDate`, `invoiceNumber`.
 - Offset pagination: `offset` ≥ 0, `limit` 1–50 (default 10). The response is `{ items, total, offset, limit }`.
@@ -170,20 +170,20 @@ Proposed contract (A10), served by the MSW mock in `ui/src/mocks/` during develo
 
 ### Assignment
 
-The request is `{ invoiceId, splits }` with all four splits, including `MERCHANT_PAYOUT`, so the server checks exactly the values shown in the confirmation modal. A difference between payment and invoice amount is not rejected (A4). On success the payment becomes `ASSIGNED` and the invoice `PAID`.
+The request is `{ invoiceId, splits }` with all four splits, including `MERCHANT_PAYOUT`, so the server checks exactly the values shown in the confirmation modal. A difference between payment and invoice amount is not rejected. On success the payment becomes `ASSIGNED` and the invoice `PAID`.
 
 The request is idempotent: once the payment is assigned, the same `invoiceId` with the same amount per split type returns `200` with the stored assignment. A retry after a lost response (timeout, 5xx) therefore succeeds instead of reporting the client's own assignment as `PAYMENT_ALREADY_ASSIGNED`.
 
 ### Errors
 
-RFC 9457 problem details (`application/problem+json`): `{ status, code, title, errors?: [{ field, code }] }`. The UI maps `code` to a message id and never shows `title` (D1).
+RFC 9457 problem details (`application/problem+json`): `{ status, code, title, errors?: [{ field, code }] }`. The UI maps `code` to a message id and never shows `title`, so every message is translated.
 
 | Status | `code` | Cause |
 |---|---|---|
 | 400 | `INVALID_QUERY` | Invalid search parameters, including a payment `status` other than `UNMATCHED` |
 | 404 | `PAYMENT_NOT_FOUND` | Unknown payment id |
 | 409 | `PAYMENT_ALREADY_ASSIGNED` | Payment is no longer `UNMATCHED` and the request differs from the stored assignment |
-| 409 | `INVOICE_NOT_OPEN` | Invoice is not `OPEN` or already assigned (A3) |
+| 409 | `INVOICE_NOT_OPEN` | Invoice is not `OPEN` or already assigned |
 | 422 | `INVOICE_NOT_FOUND` | Unknown `invoiceId` in the request body |
 | 422 | `VALIDATION_FAILED` | Not exactly one split per type, or an amount that is not an integer ≥ 0 in EUR |
 | 422 | `SPLIT_SUM_MISMATCH` | The splits do not add up to the payment amount |
@@ -195,9 +195,9 @@ RFC 9457 problem details (`application/problem+json`): `{ status, code, title, e
 
 - An invoice is what is owed. Splits distribute money that was actually received.
 - Splits are part of the confirmed decision and are created or reversed with it.
-- Adding partial payments later (A3) only drops `unique` on `invoiceId`.
+- Adding partial payments later only drops `unique` on `invoiceId`.
 
 ### Why integer cents
 
 Floating point is inexact: `1249 - 62.45 - 18.74 - 14.90` gives `1152.9099999999999` in JavaScript. In cents, sums
-compare exactly. Euros appear only at the field (converted once, see `toAmountInput`) and in display (D1).
+compare exactly. Euros appear only at the field (converted once, see `toAmountInput`) and in display.

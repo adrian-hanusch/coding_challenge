@@ -47,7 +47,7 @@ at `/payments/<id>/assign`, e.g. `/payments/pay-assigned/assign` for the already
 | Payment              | Case                                                 |
 | -------------------- | ---------------------------------------------------- |
 | `pay-exact`          | Invoice `418` matches exactly (€1,249.00)            |
-| `pay-mismatch`       | Matching invoice `502` is €50.00 higher (A4)         |
+| `pay-mismatch`       | Matching invoice `502` is €50.00 higher              |
 | `pay-assigned`       | Already assigned                                     |
 | `pay-unknown-sender` | Sender without a customer (`customerId: null`), edge |
 | `pay-many-invoices`  | Sender with 28 invoices, for pagination              |
@@ -88,9 +88,9 @@ src/
   features/payment-assignment/
     PaymentAssignment, useAssignmentFlow   The steps for each state of the process, and their state
     payment/       Step 1: payment summary and search
-    invoice/       Step 2: invoice search and selection, amount mismatch (A4)
-    fee-splitter/  Step 3: fees and payout (calculated, can be overridden, A1)
-    confirmation/  Confirmation dialog, the request and its error handling (A2)
+    invoice/       Step 2: invoice search and selection, amount mismatch
+    fee-splitter/  Step 3: fees and payout (calculated, can be overridden)
+    confirmation/  Confirmation dialog, the request and its error handling
   domain/          Pure functions: money in cents, split calculation and validation
   lib/             Hooks and helpers: formatting, paged search, focus, pasted amounts
   components/      Shared UI: Page, steps, search field, money field, notices
