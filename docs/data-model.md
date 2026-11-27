@@ -75,46 +75,9 @@ erDiagram
 
 ## TypeScript types
 
-```ts
-type Money = { amountMinor: number; currency: 'EUR' };
-
-type PaymentStatus = 'UNMATCHED' | 'ASSIGNED';
-type InvoiceStatus = 'OPEN' | 'PAID';
-type SplitType = 'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE' | 'MERCHANT_PAYOUT';
-
-interface Payment {
-  id: string;
-  amount: Money;
-  senderName: string;
-  referenceNumber: string;
-  customerId: string | null;
-  receivedAt: string;               // ISO 8601
-  status: PaymentStatus;
-}
-
-// API shape: merchantId is resolved to { id, name } so search results and
-// the confirmation modal can show the merchant name without a second request.
-interface Invoice {
-  id: string;
-  invoiceNumber: string;            // plain number, e.g. "418" (A9)
-  merchant: { id: string; name: string };
-  customerId: string;
-  amount: Money;
-  status: InvoiceStatus;
-  dueDate: string;
-}
-
-interface PaymentSplit {
-  type: SplitType;
-  amount: Money;
-}
-
-interface PaymentAssignment {
-  paymentId: string;
-  invoiceId: string;
-  splits: PaymentSplit[];           // exactly 4, sum = payment.amount
-}
-```
+The API types live in [`ui/src/api/types.ts`](../ui/src/api/types.ts). Unlike the entity, the API `Invoice` carries
+`merchant: { id, name }` instead of `merchantId`, so search results and the confirmation modal need no second request.
+`invoiceNumber` is a plain string such as `"418"` (A9).
 
 ## Frontend state
 
