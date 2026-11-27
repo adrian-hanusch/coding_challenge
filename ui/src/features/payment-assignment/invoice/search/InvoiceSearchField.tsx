@@ -41,7 +41,7 @@ export function InvoiceSearchField({ customerId, senderName, start, errorRequest
     if (query === '') setInputError(MISSING)
   }
 
-  const { invoices, fromSender, others, ...search } = useInvoiceSearch({ query, customerId })
+  const { invoices, exactMatches, fromSender, others, ...search } = useInvoiceSearch({ query, customerId })
   const { track, lookup } = useInvoiceNumberLookup(customerId, start.text)
 
   function changeText(next: string) {
@@ -112,6 +112,16 @@ export function InvoiceSearchField({ customerId, senderName, start, errorRequest
       }}
       data-testid="invoice-search"
     >
+      {exactMatches.length > 0 ? (
+        <ListBox.Section id="exact">
+          <Header>
+            <FormattedMessage id="invoiceSearch.section.exact" />
+          </Header>
+          {exactMatches.map((item) => (
+            <InvoiceOption key={item.id} invoice={item} />
+          ))}
+        </ListBox.Section>
+      ) : null}
       {fromSender.length > 0 ? (
         <ListBox.Section id="sender">
           <Header>
@@ -124,7 +134,7 @@ export function InvoiceSearchField({ customerId, senderName, start, errorRequest
       ) : null}
       {others.length > 0 ? (
         <ListBox.Section id="others">
-          {fromSender.length > 0 ? (
+          {exactMatches.length > 0 || fromSender.length > 0 ? (
             <Header>
               <FormattedMessage id="invoiceSearch.section.others" />
             </Header>
