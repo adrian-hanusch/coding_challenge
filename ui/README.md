@@ -84,7 +84,7 @@ src/
   index.css        Tailwind v4, HeroUI, font, adjustments to HeroUI components (no tailwind.config.js)
   themes/          Theme: colors, radii, shadows (overrides HeroUI variables)
   app/             Providers, routes, paths, error and fallback pages, TanStack Query defaults, header (shell/)
-  pages/           One file per route; the only place that navigates
+  pages/           One file per route; features never navigate, they report to their page through callbacks
   features/payment-assignment/
     PaymentAssignment, useAssignmentFlow   The steps for each state of the process, and their state
     payment/       Step 1: payment summary and search

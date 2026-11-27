@@ -27,7 +27,8 @@ HeroUI v3, TanStack Query, react-router and Zustand were **given**. Everything e
 - **One place per kind of state.** Server data in TanStack Query, form values in `useState`
   (`useAssignmentFlow`, `useSplitDraft`), the language in Zustand. Server data never goes into Zustand.
 - **Data mode without loaders.** `createBrowserRouter` is used for `errorElement`; data is loaded only through
-  TanStack Query, so there is one cache. Only `pages/` navigate; features report through callbacks.
+  TanStack Query, so there is one cache. Only `pages/` and the status pages in `app/` navigate; features report through
+  callbacks.
 - **HeroUI pitfalls.** `NumberField` returns a float (`NaN` when empty), so it is converted to cents right at the field
   (`MoneyField`). The ComboBox's client filter is off for server-side search (`SearchField`). React Aria's own
   validation is not used; fields get `isInvalid` and the message from our validation.
