@@ -63,7 +63,7 @@ second language, the payment search (replaced by a link per test payment).
 
 | Document                                   | Content                                                                                    |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| [docs/assumptions.md](docs/assumptions.md) | What the task requires, what was assumed where it is open or contradictory, open questions |
+| [docs/assumptions.md](docs/assumptions.md) | What was assumed where the task is open or contradictory, open questions                   |
 | [docs/data-model.md](docs/data-model.md)   | Types, money handling in cents, the proposed REST API and its error codes                  |
 | [docs/libraries.md](docs/libraries.md)     | Stack, reasons for each library, architecture trade-offs, what was left out                |
 | [ui/README.md](ui/README.md)               | Setup, all commands, mock API, test data and scenarios, source structure                   |
