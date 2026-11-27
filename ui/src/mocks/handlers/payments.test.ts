@@ -1,18 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Page, Payment } from '../../api/types.ts'
-import { server } from '../node.ts'
+import { db } from '../db.ts'
+import { setupNodeMockServer } from '../node.ts'
 
-beforeAll(() => {
-  // MSW resolves the relative handler paths against the location, which Node does not have.
-  vi.stubGlobal('location', new URL('http://localhost/'))
-  server.listen()
-})
-
-afterAll(() => {
-  server.close()
-  vi.unstubAllGlobals()
-})
+setupNodeMockServer()
 
 const search = (query: string) => fetch(`http://localhost/api/payments?${query}`)
 
@@ -46,5 +38,42 @@ describe('GET /payments', () => {
       code: 'INVALID_QUERY',
       errors: [{ field: 'status', code: 'INVALID_STATUS' }],
     })
+  })
+})
+
+describe('POST /payments/:paymentId/assignment', () => {
+  afterEach(() => {
+    db.reset()
+  })
+
+  const invoiceId = () => db.listInvoices().find(({ invoiceNumber }) => invoiceNumber === '418')?.id
+  const splits = (payout: number) => [
+    { type: 'PLATFORM_FEE', amount: { amountMinor: 0, currency: 'EUR' } },
+    { type: 'PROVIDER_FEE', amount: { amountMinor: 0, currency: 'EUR' } },
+    { type: 'LOGISTICS_FEE', amount: { amountMinor: 124900 - payout, currency: 'EUR' } },
+    { type: 'MERCHANT_PAYOUT', amount: { amountMinor: payout, currency: 'EUR' } },
+  ]
+  const assign = (payout: number) =>
+    fetch('http://localhost/api/payments/pay-exact/assignment', {
+      method: 'POST',
+      body: JSON.stringify({ invoiceId: invoiceId(), splits: splits(payout) }),
+    })
+
+  it('answers a repeated identical request with the stored assignment', async () => {
+    expect((await assign(124900)).status).toBe(201)
+
+    const repeated = await assign(124900)
+
+    expect(repeated.status).toBe(200)
+    expect(await repeated.json()).toEqual({ paymentId: 'pay-exact', invoiceId: invoiceId(), splits: splits(124900) })
+  })
+
+  it('rejects a different request once the payment is assigned', async () => {
+    expect((await assign(124900)).status).toBe(201)
+
+    const different = await assign(120000)
+
+    expect(different.status).toBe(409)
+    expect(await different.json()).toMatchObject({ code: 'PAYMENT_ALREADY_ASSIGNED' })
   })
 })

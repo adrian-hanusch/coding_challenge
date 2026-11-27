@@ -1,141 +1,102 @@
 # Payment Management UI
 
-Frontend der Coding Challenge. Stack und Begründungen: [docs/libraries.md](../docs/libraries.md).
+Frontend of the coding challenge. Stack and reasons: [docs/libraries.md](../docs/libraries.md).
 
-## Voraussetzungen
+## Requirements
 
-- Node.js 24
-- pnpm 12, z. B. über Corepack: `corepack enable pnpm && corepack install -g pnpm@12`
+- Node.js 22.22 or newer (24 recommended, see `.nvmrc`)
+- pnpm 10 or newer, e.g. through Corepack: `corepack enable pnpm`
 
-Die geforderte pnpm-Version steht in `devEngines.packageManager` in der `package.json`. Corepack wertet dieses Feld
-nicht aus, deshalb muss pnpm 12 global installiert sein. Mit einer älteren Version bricht `pnpm install` mit einer
-Fehlermeldung ab.
+Without a global pnpm, prefix every command with `npx`, e.g. `npx pnpm@10 install` and `npx pnpm@10 dev`.
 
-## Befehle
+## Commands
 
-| Befehl           | Zweck                                                            |
-| ---------------- | ---------------------------------------------------------------- |
-| `pnpm install`   | Abhängigkeiten installieren                                      |
-| `pnpm dev`       | Dev-Server auf http://localhost:5173                             |
-| `pnpm build`     | Typecheck und Produktions-Build nach `dist/`                     |
-| `pnpm typecheck` | Nur TypeScript prüfen                                            |
-| `pnpm lint`      | ESLint (`pnpm lint:fix` behebt, was automatisch geht)            |
-| `pnpm test`      | Unit-Tests mit Vitest (`pnpm test:watch` im Watch-Modus)         |
-| `pnpm format`    | Prettier formatiert alle Dateien (`pnpm format:check` prüft nur) |
-| `pnpm preview`   | Produktions-Build lokal ausliefern                               |
+| Command          | Purpose                                                      |
+| ---------------- | ------------------------------------------------------------ |
+| `pnpm install`   | Install dependencies                                         |
+| `pnpm dev`       | Dev server on http://localhost:5173                          |
+| `pnpm build`     | Typecheck and production build into `dist/`                  |
+| `pnpm typecheck` | TypeScript only                                              |
+| `pnpm lint`      | ESLint (`pnpm lint:fix` fixes what it can)                   |
+| `pnpm test`      | Tests with Vitest (`pnpm test:watch` in watch mode)          |
+| `pnpm format`    | Prettier formats all files (`pnpm format:check` only checks) |
+| `pnpm preview`   | Serve the production build locally                           |
+| `pnpm demo`      | Production build with the mock API on http://localhost:4173  |
 
-Die `.npmrc` in diesem Ordner setzt die öffentliche npm-Registry.
+The `.npmrc` in this folder sets the public npm registry.
 
-## Mock-API
+## Mock API
 
-Im Dev-Betrieb beantwortet [MSW](https://mswjs.io) alle Anfragen an `/api` direkt im Browser. Ein Backend ist nicht
-nötig. Vertrag und Fehlercodes: [docs/data-model.md](../docs/data-model.md#api).
+In development [MSW](https://mswjs.io) answers all requests to `/api` directly in the browser. No backend is needed.
+Contract and error codes: [docs/data-model.md](../docs/data-model.md#api).
 
-- Gesteuert über `VITE_API_MOCKING` in `.env.development` (Standard `true`). Für ein echtes Backend
-  `VITE_API_MOCKING=false` in `.env.development.local` setzen. Vite leitet `/api` dann an `API_URL` weiter
-  (Standard `http://localhost:8080`).
-- Der Mock läuft nur mit `pnpm dev`. `pnpm build` und `pnpm preview` enthalten ihn nicht.
-- Der Mock antwortet nur im Browser, nicht auf `curl`. Zum Ausprobieren in der Browser-Konsole:
+- Controlled by `VITE_API_MOCKING` in `.env.development` (default `true`). For a real backend, set
+  `VITE_API_MOCKING=false` in `.env.development.local`. Vite then proxies `/api` to `API_URL` (default
+  `http://localhost:8080`).
+- The mock runs with `pnpm dev` and `pnpm demo`. The latter builds with `--mode demo` (`.env.demo`) into `dist-demo/`
+  and serves it. `pnpm build` and `pnpm preview` do not contain the mock.
+- The mock only answers in the browser, not to `curl`. To try it in the browser console:
   `await (await fetch('/api/payments/pay-exact')).json()`.
-- Der Datenstand liegt in `sessionStorage`. Eine bestätigte Zahlung bleibt also nach einem Reload zugeordnet.
+- The data lives in memory: a confirmed payment stays assigned until the page is reloaded.
 
-### Testfälle
+### Test cases
 
-Unter `/payments` lassen sich alle nicht zugeordneten Testzahlungen in Schritt 1 suchen und wählen. Jede andere
-Zahlung öffnet man direkt über `/payments/<id>/assign`, z. B. `/payments/pay-assigned/assign` für den bereits
-zugeordneten Fall.
+All unmatched test payments can be searched and chosen in step 1 at `/payments`. Any other payment is opened directly
+at `/payments/<id>/assign`, e.g. `/payments/pay-assigned/assign` for the already assigned case.
 
-| Zahlung              | Fall                                               |
-| -------------------- | -------------------------------------------------- |
-| `pay-exact`          | Rechnung `418` passt genau (1.249,00 €)            |
-| `pay-mismatch`       | Passende Rechnung `502` liegt 50,00 € höher (A4)   |
-| `pay-assigned`       | Bereits zugeordnet                                 |
-| `pay-unknown-sender` | Absender ohne Kunde (`customerId: null`), Randfall |
-| `pay-many-invoices`  | Absender mit 28 Rechnungen, für die Paginierung    |
+| Payment              | Case                                                 |
+| -------------------- | ---------------------------------------------------- |
+| `pay-exact`          | Invoice `418` matches exactly (€1,249.00)            |
+| `pay-mismatch`       | Matching invoice `502` is €50.00 higher              |
+| `pay-assigned`       | Already assigned                                     |
+| `pay-unknown-sender` | Sender without a customer (`customerId: null`), edge |
+| `pay-many-invoices`  | Sender with 28 invoices, for pagination              |
 
-`420` ist bezahlt, `9999` existiert nicht.
+`420` is paid and therefore not found, like `9999`, which does not exist.
 
-`pay-unknown-sender` liegt außerhalb des Szenarios der Aufgabe (dort ist der Absender bekannt) und prüft, dass die
-Seite auch ohne Kunden funktioniert.
+`pay-unknown-sender` is outside the task's scenario (there the sender is known) and checks that the page also works
+without a customer.
 
-### Szenarien
+### Scenarios
 
-Als URL-Parameter, sie gelten bis zum Schließen des Tabs:
+As URL parameters, they apply until the tab is closed:
 
-| Parameter                              | Wirkung                                                  |
-| -------------------------------------- | -------------------------------------------------------- |
-| `?mock-delay=2000`                     | Feste Antwortzeit in ms (sonst zufällig 100–400 ms)      |
-| `?mock-fail=assignment:409,search:500` | Endpunkte schlagen fehl, Werte siehe unten               |
-| `?mock-fail=` / `?mock-delay=`         | Setzt den jeweiligen Schalter zurück                     |
-| `?mock-reset`                          | Stellt die Testdaten wieder her und löscht alle Schalter |
+| Parameter                              | Effect                                                  |
+| -------------------------------------- | ------------------------------------------------------- |
+| `?mock-delay=2000`                     | Fixed response time in ms (otherwise random 100–400 ms) |
+| `?mock-fail=assignment:409,search:500` | Endpoints fail, values see below                        |
+| `?mock-fail=` / `?mock-delay=`         | Resets the respective switch                            |
+| `?mock-reset`                          | Clears all switches                                     |
 
-Werte für `mock-fail`:
+Values for `mock-fail`:
 
-- `payment:500`, `paymentSearch:500`, `search:500`, `assignment:500`: Serverfehler (`INTERNAL_ERROR`)
-- `assignment:409`: Zahlung wurde inzwischen zugeordnet (`PAYMENT_ALREADY_ASSIGNED`)
-- `assignment:409-invoice`: Rechnung ist nicht mehr offen (`INVOICE_NOT_OPEN`)
+- `payment:500`, `paymentSearch:500`, `search:500`, `assignment:500`: server error (`INTERNAL_ERROR`)
+- `assignment:409`: the payment was assigned in the meantime (`PAYMENT_ALREADY_ASSIGNED`)
+- `assignment:409-invoice`: the invoice is no longer open (`INVOICE_NOT_OPEN`)
 
-In der Browser-Konsole setzt `__mockDb.reset()` nur die Daten zurück.
+In the browser console, `__mockDb.reset()` restores the test data without a reload.
 
-## Aufbau
+## Structure
 
 ```
 src/
-  main.tsx              Einstiegspunkt
-  index.css             Tailwind v4, HeroUI, Schrift, Anpassungen an HeroUI-Komponenten (keine tailwind.config.js)
-  themes/petrol.css     Theme: Farben, Radien, Schatten (überschreibt HeroUI-Variablen)
-  app/AppProviders.tsx  QueryClient, Sprache, Toasts, Query-Devtools (nur Dev)
-  app/router.tsx        Routen (react-router, Data Mode), Pfade in app/paths.ts
-  app/RouteError.tsx    Fehlerseite der Routen
-  app/shell/            App Shell, eine Komponente pro Aufgabe
-    AppShell.tsx        Layout: Sidebar (mobil: Kopfzeile), Seite
-    MobileHeader.tsx    Kopfzeile auf kleinen Bildschirmen: Menü-Button und Logo
-    LocaleMenu.tsx      Sprachwahl, unten in Sidebar und Drawer
-    navigation/         Sidebar (Desktop), Drawer (Mobil), NavList/NavItem, navItems.ts
-      navigationStore.ts  Zustand: Sidebar eingeklappt (gespeichert)
-  pages/                Seiten, eine Datei pro Route, StatusPage für Fallback-Seiten
-    SelectPaymentPage   /payments, Schritt 1: Zahlung wählen
-    AssignPaymentPage   /payments/:paymentId/assign, lädt die Zahlung (Fehler, Skeleton)
-  features/payment-assignment/  Zuordnung, ein Unterordner pro Schritt
-    PaymentSelection    Ablauf ohne gewählte Zahlung: nur Schritt 1 ist offen
-    PaymentAssignment   Steuert den Ablauf: hält Rechnung, Aufteilung und Dialog, zeigt je Zustand die Schritte
-    PaymentAssignmentSkeleton  Schritte, während die Zahlung lädt
-    steps/              AssignmentSteps: Reihenfolge, Titel und Sperrhinweise der Schritte
-    payment/            Schritt 1: PaymentSummary, Zahlungsdaten (nur Anzeige, A11)
-      search/           Suche über nicht zugeordnete Zahlungen (ComboBox)
-    invoice/            Schritt 2: Rechnung wählen und ändern, InvoiceSummary, Betragsabweichung (A4)
-      AssignedNotice    Ersetzt die Auswahl, wenn die Zahlung schon zugeordnet ist
-      MismatchAcknowledgement  Hinweis auf die Differenz und Checkbox zur Bestätigung im Dialog
-      search/           Rechnungsauswahl (ComboBox) mit serverseitiger Suche und Paginierung
-        useInvoiceNumberLookup  Löst eine eingetippte Nummer auf (beim Verlassen oder mit Enter)
-        invoiceInput.ts         Fehlerfälle einer eingetippten Nummer (nicht gefunden, nicht offen)
-    fee-splitter/       Fee Splitter: Gebühren und Auszahlung (berechnet, überschreibbar, A1)
-      useSplitDraft     Entwurf der Aufteilung, Auswertung, berührte Felder
-      SplitErrorAlert   Fehler der Aufteilung (Gebühren zu hoch, Summe stimmt nicht)
-    confirmation/       Summary Section als Bestätigungsdialog (A2)
-      ConfirmAssignment        Button unter den Schritten, nennt fehlende Eingaben, öffnet den Dialog
-      ConfirmAssignmentDialog  Modal: Zusammenfassung von allem, was gespeichert wird; Differenz bestätigen (A4)
-      SplitBreakdown           Zahlung, Gebühren, Auszahlung im Dialog
-      useAssignPayment         useMutation zum Absenden, Erfolgstoast, hält Zahlungen und Rechnungen im Cache aktuell
-      assignmentFailure        Fehlercodes des Servers als Fehlerarten, die der Nutzer beheben kann
-      AssignmentErrorAlert     Fehler des Servers beim Absenden, je Fehlerart ein Text
-  domain/assignment.ts  Was die Bestätigung blockiert, Splits für die API
-  domain/invoice.ts     Nur offene Rechnungen wählbar (A3), Differenz zwischen Zahlung und Rechnung
-  domain/split.ts       Aufteilung in Cent: Entwurf, Berechnung, Prüfung (reine Funktionen)
-  lib/money.ts          Beträge ohne React: Eingabe in Cent umrechnen, Obergrenze
-  lib/useFormatMoney.ts Beträge in der aktiven Sprache formatieren
-  lib/useFormatDate.ts  Fälligkeit (reines Datum, UTC) und Zeitpunkte in der aktiven Sprache formatieren
-  i18n/                 react-intl + React Aria mit einer gemeinsamen Sprachquelle
-    localeStore.ts      Zustand: gewählte Sprache (gespeichert)
-    messages/*.json     Texte, flache Schlüssel mit Punkten, ICU-Platzhalter
-  app/queryClient.ts    Standardoptionen für TanStack Query (Retry nur bei Server- und Netzwerkfehlern)
-  components/Typography HeroUI Typography mit elementType: Optik (type) und HTML-Element getrennt wählbar
-  lib/usePagedSearch.ts Verzögerte Suche mit Paginierung für Zahlungen und Rechnungen
-  components/           Seitenübergreifend: Page, steps/, BlockableButton, search/, SelectionSummary (gewählte Zahlung oder Rechnung, auch im Dialog), Notice, MoneyField (Cent)
-  api/                  Typen des API-Vertrags, fetch-Client, Query-Optionen
-  mocks/                MSW: Handler, Testdaten, In-Memory-DB, Szenarien
-    browser.ts          Start im Browser (nur Dev)
-    node.ts             setupServer für Vitest
+  main.tsx         Entry point; starts the mock API first when it is enabled
+  index.css        Tailwind v4, HeroUI, font, adjustments to HeroUI components (no tailwind.config.js)
+  themes/          Theme: colors, radii, shadows (overrides HeroUI variables)
+  app/             Providers, routes, paths, error and fallback pages, TanStack Query defaults, header (shell/)
+  pages/           One file per route; features never navigate, they report to their page through callbacks
+  features/payment-assignment/
+    PaymentAssignment, useAssignmentFlow   The steps for each state of the process, and their state
+    payment/       Step 1: payment summary and search
+    invoice/       Step 2: invoice search and selection, amount mismatch
+    fee-splitter/  Step 3: fees and payout (calculated, can be overridden)
+    confirmation/  Confirmation dialog, the request and its error handling
+  domain/          Pure functions: money in cents, split calculation and validation
+  lib/             Hooks and helpers: formatting, paged search, focus, pasted amounts
+  components/      Shared UI: Page, steps, search field, money field, notices
+  i18n/            react-intl + React Aria with one locale source (Zustand), messages/*.json
+  api/             Types of the API contract, fetch client, query options
+  mocks/           MSW: handlers, test data, in-memory DB, scenarios; browser.ts and node.ts start it
 ```
 
-Neue Texte kommen in `en.json` und `de.json`. Fehlt ein Schlüssel in `de.json`, schlägt der Typecheck fehl.
+New messages go into `en.json` and `de.json`. A key missing in `de.json` fails the typecheck.

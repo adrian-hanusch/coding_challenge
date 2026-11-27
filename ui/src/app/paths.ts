@@ -7,8 +7,11 @@ export const PATHS = {
 
 export const assignPaymentPath = (paymentId: string) => generatePath(PATHS.assignPayment, { paymentId })
 
-/** Navigation state of the redirect to the payment selection after an assignment. */
-export const AFTER_ASSIGNMENT = 'afterAssignment'
+/** Why the payment selection was opened, passed as navigation state. */
+const SELECT_PAYMENT_REASONS = ['afterAssignment', 'changePayment'] as const
+export type SelectPaymentReason = (typeof SELECT_PAYMENT_REASONS)[number]
 
-/** Navigation state when the payment selection is opened to replace the chosen payment. */
-export const CHANGE_PAYMENT = 'changePayment'
+/** `location.state` is untyped and survives in the browser history, so it is checked instead of cast. */
+export function selectPaymentReason(state: unknown): SelectPaymentReason | null {
+  return SELECT_PAYMENT_REASONS.find((reason) => reason === state) ?? null
+}

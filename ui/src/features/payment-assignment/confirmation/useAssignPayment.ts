@@ -5,8 +5,7 @@ import { useIntl } from 'react-intl'
 import { invoiceKeys } from '../../../api/invoices.ts'
 import { createAssignment, paymentKeys, paymentQueryOptions } from '../../../api/payments.ts'
 import type { Invoice, Payment } from '../../../api/types.ts'
-import { toPaymentSplits } from '../../../domain/assignment.ts'
-import type { CompleteSplit } from '../../../domain/split.ts'
+import { type CompleteSplit, toPaymentSplits } from '../../../domain/split.ts'
 import { useFormatMoney } from '../../../lib/useFormatMoney.ts'
 import { failureOf, isInvoiceRejected } from './assignmentFailure.ts'
 
@@ -15,12 +14,21 @@ interface AssignVariables {
   split: CompleteSplit
 }
 
-export function useAssignPayment(payment: Payment) {
+/** What the confirmation needs from the request, independent of how it is sent. */
+export interface AssignmentSubmission {
+  isPending: boolean
+  /** Of the last attempt, until `reset`. */
+  error: Error | null
+  submit: (variables: AssignVariables) => void
+  reset: () => void
+}
+
+export function useAssignPayment(payment: Payment, onAssigned: () => void) {
   const queryClient = useQueryClient()
   const intl = useIntl()
   const formatMoney = useFormatMoney()
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({ invoice, split }: AssignVariables) =>
       createAssignment(payment.id, {
         invoiceId: invoice.id,
@@ -47,6 +55,15 @@ export function useAssignPayment(payment: Payment) {
       if (isInvoiceRejected(error)) void queryClient.invalidateQueries({ queryKey: invoiceKeys.all })
     },
   })
-}
 
-export type AssignPaymentMutation = ReturnType<typeof useAssignPayment>
+  const submission: AssignmentSubmission = {
+    isPending: mutation.isPending,
+    error: mutation.error,
+    // Per-call callbacks are skipped once the page has unmounted, so a user who already left is not redirected.
+    submit: (variables) => {
+      mutation.mutate(variables, { onSuccess: onAssigned })
+    },
+    reset: mutation.reset,
+  }
+  return { submission, isAssigned: mutation.isSuccess }
+}

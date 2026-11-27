@@ -1,18 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { stripCurrency, toAmountInput, toEuros } from './money.ts'
-
-describe('stripCurrency', () => {
-  it('removes symbol, code and spaces around the number', () => {
-    expect(stripCurrency('1.249,00 €', '€', 'EUR')).toBe('1.249,00')
-    expect(stripCurrency('€62.45', '€', 'EUR')).toBe('62.45')
-    expect(stripCurrency('EUR 62.45', '€', 'EUR')).toBe('62.45')
-  })
-
-  it('leaves plain numbers unchanged', () => {
-    expect(stripCurrency('62,45', '€', 'EUR')).toBe('62,45')
-  })
-})
+import { MAX_AMOUNT_MINOR, toAmountInput, toEuros } from './money.ts'
 
 describe('toAmountInput', () => {
   it('converts euros to cents', () => {
@@ -23,6 +11,12 @@ describe('toAmountInput', () => {
   it('tolerates the float error of multiplying by 100', () => {
     expect(toAmountInput(0.29)).toBe(29)
     expect(toAmountInput(1152.91)).toBe(115291)
+  })
+
+  it('stays exact for amounts up to the maximum', () => {
+    expect(toAmountInput(616582543.57)).toBe(61658254357)
+    expect(toAmountInput(134221640.2)).toBe(13422164020)
+    expect(toAmountInput(MAX_AMOUNT_MINOR / 100 - 0.01)).toBe(MAX_AMOUNT_MINOR - 1)
   })
 
   it('keeps more than two decimals as too precise instead of rounding', () => {

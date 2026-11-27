@@ -40,13 +40,10 @@ async function ensureControlled() {
 
 /** Starts the mock API in the browser. Must resolve before the app renders, or the first queries miss the worker. */
 export async function startMockApi() {
-  db.enablePersistence(sessionStorage)
-
   const url = new URL(window.location.href)
   const { scenario, reset } = loadScenario(url, sessionStorage)
   if (reset) {
-    db.reset()
-    // Otherwise every reload would reset again.
+    // Otherwise every reload would clear the switches again.
     url.searchParams.delete('mock-reset')
     window.history.replaceState(window.history.state, '', url)
   }

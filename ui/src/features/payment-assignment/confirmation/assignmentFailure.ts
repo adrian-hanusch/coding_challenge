@@ -2,13 +2,21 @@ import { ApiError } from '../../../api/client.ts'
 
 /** `unconfirmed`: no usable answer (network error, 5xx), so the assignment may or may not have been stored. */
 export type AssignmentFailure =
-  'alreadyAssigned' | 'invoiceNotOpen' | 'invoiceNotFound' | 'invalidSplit' | 'invalidRequest' | 'unconfirmed'
+  | 'alreadyAssigned'
+  | 'paymentNotFound'
+  | 'invoiceNotOpen'
+  | 'invoiceNotFound'
+  | 'invalidSplit'
+  | 'invalidRequest'
+  | 'unconfirmed'
 
 export function failureOf(error: Error): AssignmentFailure {
   if (!(error instanceof ApiError)) return 'unconfirmed'
   switch (error.code) {
     case 'PAYMENT_ALREADY_ASSIGNED':
       return 'alreadyAssigned'
+    case 'PAYMENT_NOT_FOUND':
+      return 'paymentNotFound'
     case 'INVOICE_NOT_OPEN':
       return 'invoiceNotOpen'
     case 'INVOICE_NOT_FOUND':
@@ -18,7 +26,8 @@ export function failureOf(error: Error): AssignmentFailure {
     case 'VALIDATION_FAILED':
       return 'invalidRequest'
     default:
-      return 'unconfirmed'
+      // Any other 4xx is a definite rejection; repeating the same request would get the same answer.
+      return error.status < 500 ? 'invalidRequest' : 'unconfirmed'
   }
 }
 
@@ -27,5 +36,5 @@ export const isInvoiceRejected = (error: Error) => {
   return failure === 'invoiceNotOpen' || failure === 'invoiceNotFound'
 }
 
-/** A retry is safe: the server stores an assignment only once and answers PAYMENT_ALREADY_ASSIGNED otherwise. */
+/** A retry is safe: the server answers an identical request with the stored assignment and a different one with 409. */
 export const isRetryable = (error: Error) => failureOf(error) === 'unconfirmed'

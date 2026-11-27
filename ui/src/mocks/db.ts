@@ -1,6 +1,5 @@
 import type { Invoice, Payment, PaymentAssignment, PaymentSplit } from '../api/types.ts'
 import { ASSIGNMENTS, INVOICES, PAYMENTS } from './fixtures.ts'
-import { readJson } from './storage.ts'
 
 interface MockState {
   payments: Payment[]
@@ -8,37 +7,19 @@ interface MockState {
   assignments: PaymentAssignment[]
 }
 
-// Bump when the fixtures change, so a stale state in sessionStorage is discarded.
-const STATE_VERSION = 2
-const STORAGE_KEY = 'mock:db'
-
 function seed(): MockState {
   return structuredClone({ payments: PAYMENTS, invoices: INVOICES, assignments: ASSIGNMENTS }) as MockState
 }
 
 let state = seed()
-let storage: Storage | null = null
-
-function persist() {
-  storage?.setItem(STORAGE_KEY, JSON.stringify({ version: STATE_VERSION, state }))
-}
 
 /**
  * In-memory backend state. Reads return read-only views; responses are serialized anyway.
- * Without `enablePersistence` (Vitest), the state lives only as long as the module.
+ * It lives as long as the page, so a reload starts from the fixtures again.
  */
 export const db = {
-  /** Keeps the state across reloads, so a confirmed payment stays assigned (browser only). */
-  enablePersistence(target: Storage) {
-    storage = target
-    const stored = readJson(target, STORAGE_KEY) as { version: number; state: MockState } | null
-    if (stored?.version === STATE_VERSION) state = stored.state
-    else persist()
-  },
-
   reset() {
     state = seed()
-    persist()
   },
 
   findPayment(id: string): Readonly<Payment> | undefined {
@@ -57,8 +38,12 @@ export const db = {
     return state.invoices
   },
 
+  findAssignment(paymentId: string): Readonly<PaymentAssignment> | undefined {
+    return state.assignments.find((assignment) => assignment.paymentId === paymentId)
+  },
+
   /**
-   * Stores the assignment, marks the payment as assigned and the invoice as paid (the backend decides).
+   * Stores the assignment, marks the payment as assigned and the invoice as paid, also for a different amount.
    * A paid invoice is no longer OPEN, which keeps it from being assigned twice.
    */
   assign(paymentId: string, invoiceId: string, splits: PaymentSplit[]): PaymentAssignment {
@@ -70,7 +55,6 @@ export const db = {
     state.invoices = state.invoices.map((invoice) =>
       invoice.id === invoiceId ? { ...invoice, status: 'PAID' } : invoice,
     )
-    persist()
     return assignment
   },
 }

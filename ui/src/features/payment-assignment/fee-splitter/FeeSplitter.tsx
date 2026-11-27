@@ -3,8 +3,8 @@ import { FormattedMessage } from 'react-intl'
 
 import type { Money } from '../../../api/types.ts'
 import { MoneyField } from '../../../components/MoneyField.tsx'
+import type { AmountInput } from '../../../domain/money.ts'
 import { FEE_TYPES, type SplitEvaluation, type SplitFieldError } from '../../../domain/split.ts'
-import type { AmountInput } from '../../../lib/money.ts'
 import { SplitErrorAlert } from './SplitErrorAlert.tsx'
 import type { SplitDraftState } from './useSplitDraft.ts'
 
@@ -21,7 +21,7 @@ export function FeeSplitter({ paymentAmount, split, zeroHintId }: FeeSplitterPro
 
   return (
     <div className="@container flex flex-col gap-6" data-testid="fee-splitter">
-      {/* Container query: the card is much narrower than the viewport while the sidebar is open. */}
+      {/* Container query: the card, not the viewport, decides whether the fields fit side by side. */}
       <div className="grid grid-cols-1 gap-5 @xl:grid-cols-3">
         {FEE_TYPES.map((type) => {
           const fieldError = evaluation.fieldErrors[type]

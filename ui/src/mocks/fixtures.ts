@@ -1,6 +1,6 @@
 import type { Invoice, InvoiceStatus, Money, Payment, PaymentAssignment } from '../api/types.ts'
 
-// Fixed ids so every case can be opened by URL and tests stay reproducible. Cases: ui/README.md, "Testfälle".
+// Fixed ids so every case can be opened by URL and tests stay reproducible. Cases: ui/README.md, "Test cases".
 
 const eur = (amountMinor: number): Money => ({ amountMinor, currency: 'EUR' })
 

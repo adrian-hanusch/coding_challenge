@@ -1,15 +1,16 @@
 import { useState } from 'react'
 
 import type { Money } from '../../../api/types.ts'
+import type { AmountInput } from '../../../domain/money.ts'
 import {
   evaluateSplit,
+  FEE_TYPES,
   type FeeType,
   INITIAL_SPLIT_DRAFT,
   type SplitDraft,
   withFee,
   withMerchantPayout,
 } from '../../../domain/split.ts'
-import type { AmountInput } from '../../../lib/money.ts'
 
 /** Entered split, its evaluation and which fee errors are shown. Updaters keep changes of one event from overwriting each other. */
 export function useSplitDraft(paymentAmount: Money) {
@@ -19,7 +20,7 @@ export function useSplitDraft(paymentAmount: Money) {
   return {
     draft,
     evaluation: evaluateSplit(paymentAmount.amountMinor, draft),
-    /** Fees whose "missing" error is shown, i.e. the user has left the field. */
+    /** The user has left these fields. */
     touchedFees,
     setFee: (type: FeeType, value: AmountInput) => {
       setDraft((current) => withFee(current, type, value))
@@ -29,6 +30,9 @@ export function useSplitDraft(paymentAmount: Money) {
     },
     touchFee: (type: FeeType) => {
       setTouchedFees((current) => (current.has(type) ? current : new Set(current).add(type)))
+    },
+    touchAllFees: () => {
+      setTouchedFees(new Set(FEE_TYPES))
     },
   }
 }

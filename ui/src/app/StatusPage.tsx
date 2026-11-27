@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { useNavigate } from 'react-router'
 
-import { PATHS } from '../app/paths.ts'
 import { Page } from '../components/Page.tsx'
+import { PATHS } from './paths.ts'
 
 interface StatusPageProps {
   title: ReactNode

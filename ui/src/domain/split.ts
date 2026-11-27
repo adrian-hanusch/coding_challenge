@@ -1,5 +1,5 @@
-import { SPLIT_TYPES, type SplitType } from '../api/types.ts'
-import { type AmountInput, isTooPrecise } from '../lib/money.ts'
+import { type Money, type PaymentSplit, SPLIT_TYPES, type SplitType } from '../api/types.ts'
+import { type AmountInput, isTooPrecise } from './money.ts'
 
 export type FeeType = Exclude<SplitType, 'MERCHANT_PAYOUT'>
 export const FEE_TYPES = SPLIT_TYPES.filter((type): type is FeeType => type !== 'MERCHANT_PAYOUT')
@@ -96,6 +96,10 @@ export function evaluateSplit(paymentMinor: number, draft: SplitDraft): SplitEva
 
 export function withFee(draft: SplitDraft, type: FeeType, value: AmountInput): SplitDraft {
   return { ...draft, fees: { ...draft.fees, [type]: value } }
+}
+
+export function toPaymentSplits(split: CompleteSplit, currency: Money['currency']): PaymentSplit[] {
+  return SPLIT_TYPES.map((type) => ({ type, amount: { amountMinor: split[type], currency } }))
 }
 
 /** Entering exactly the calculated value, or clearing the field, goes back to the calculated payout. */

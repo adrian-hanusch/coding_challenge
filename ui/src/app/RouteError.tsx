@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { isRouteErrorResponse, useRouteError } from 'react-router'
 
-import { StatusPage } from '../pages/StatusPage.tsx'
+import { StatusPage } from './StatusPage.tsx'
 
 export function RouteError() {
   const error = useRouteError()

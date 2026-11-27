@@ -1,16 +1,8 @@
 import { delay, type HttpResponseResolver, type PathParams } from 'msw'
 
 import { problem } from './problem.ts'
-import { readJson } from './storage.ts'
 
-/**
- * Dev-only switches, set via URL and kept in sessionStorage for the tab:
- *
- *   ?mock-delay=2000                       fixed latency in ms (default: realistic 100–400 ms)
- *   ?mock-fail=assignment:409,search:500   failing endpoints; `?mock-fail=` clears them
- *                                          (`assignment:409-invoice` simulates INVOICE_NOT_OPEN)
- *   ?mock-reset                            restores fixtures and clears all switches
- */
+// Mock switches, set via URL and kept in sessionStorage for the tab. Usage: ui/README.md, "Scenarios".
 
 // The HTTP status, with a suffix where one status has several causes.
 const FAILURES = {
@@ -53,6 +45,15 @@ function parseFailures(value: string): Scenario['failures'] {
     }
   }
   return failures
+}
+
+/** Missing or corrupt entries count as absent. */
+function readJson(storage: Storage, key: string): unknown {
+  try {
+    return JSON.parse(storage.getItem(key) ?? 'null')
+  } catch {
+    return null
+  }
 }
 
 /** Activates the switches from the URL, or the ones stored for this tab. Returns whether `?mock-reset` was given. */

@@ -1,0 +1,4 @@
+peerDependencyRules:
+  allowedVersions:
+    # Only Vitest's browser mocking uses msw through @vitest/mocker; the tests call msw/node directly.
+    '@vitest/mocker>msw': '3'

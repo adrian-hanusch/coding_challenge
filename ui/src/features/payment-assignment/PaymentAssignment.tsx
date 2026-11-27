@@ -1,52 +1,46 @@
 import { Button } from '@heroui/react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { FormattedMessage } from 'react-intl'
-import { Navigate, useNavigate } from 'react-router'
 
-import type { Invoice, Payment } from '../../api/types.ts'
-import { AFTER_ASSIGNMENT, CHANGE_PAYMENT, PATHS } from '../../app/paths.ts'
+import type { Payment } from '../../api/types.ts'
 import { Page } from '../../components/Page.tsx'
+import { useFocusWhen } from '../../lib/useFocusWhen.ts'
 import { ConfirmAssignment } from './confirmation/ConfirmAssignment.tsx'
-import { useAssignPayment } from './confirmation/useAssignPayment.ts'
 import { FeeSplitter } from './fee-splitter/FeeSplitter.tsx'
-import { useSplitDraft } from './fee-splitter/useSplitDraft.ts'
 import { AssignedNotice } from './invoice/AssignedNotice.tsx'
 import { InvoiceSelection } from './invoice/InvoiceSelection.tsx'
-import type { InvoiceSearchStart } from './invoice/search/InvoiceSearchField.tsx'
 import { PaymentSummary } from './payment/PaymentSummary.tsx'
 import { AssignmentSteps, type StepState } from './steps/AssignmentSteps.tsx'
+import { useAssignmentFlow } from './useAssignmentFlow.ts'
 
-interface InvoiceChoice {
-  invoice: Invoice | null
-  /** How the search field starts while no invoice is chosen. */
-  search: InvoiceSearchStart
+// An invalid input (React Aria also marks the field's wrapper), or the split error, which belongs to no single field.
+const FIRST_ERROR = 'input[aria-invalid="true"], [data-focus-on-error]'
+
+interface PaymentAssignmentProps {
+  payment: Payment
+  onChangePayment: () => void
+  /** Called once the assignment is stored. */
+  onAssigned: () => void
 }
 
-const EMPTY_SEARCH: InvoiceSearchStart = { text: '', autoFocus: false }
-
-export function PaymentAssignment({ payment }: { payment: Payment }) {
-  const navigate = useNavigate()
+export function PaymentAssignment({ payment, onChangePayment, onAssigned }: PaymentAssignmentProps) {
   const zeroHintId = useId()
-  const [{ invoice, search }, setInvoiceChoice] = useState<InvoiceChoice>({ invoice: null, search: EMPTY_SEARCH })
-  const [isConfirming, setIsConfirming] = useState(false)
-  const split = useSplitDraft(payment.amount)
-  const assign = useAssignPayment(payment)
-  // A refetch that finds the payment assigned must not pull the open dialog away; submitting then reports it.
-  const isEditable = payment.status === 'UNMATCHED' || isConfirming
+  const flow = useAssignmentFlow(payment, onAssigned)
+  const { invoice, split, isEditable } = flow
   const assignedNoticeRef = useRef<HTMLDivElement>(null)
-  const wasEditable = useRef(isEditable)
+  const pageRef = useRef<HTMLDivElement>(null)
 
   // The form and the dialog's trigger just unmounted, so focus would otherwise fall back to the page body.
+  useFocusWhen(assignedNoticeRef, !isEditable)
+
+  // After a confirm attempt with input missing, the first problem in page order gets the focus.
   useEffect(() => {
-    if (wasEditable.current && !isEditable) assignedNoticeRef.current?.focus()
-    wasEditable.current = isEditable
-  }, [isEditable])
+    if (flow.errorRequest > 0) pageRef.current?.querySelector<HTMLElement>(FIRST_ERROR)?.focus()
+  }, [flow.errorRequest])
 
-  if (assign.isSuccess) return <Navigate to={PATHS.selectPayment} state={AFTER_ASSIGNMENT} replace />
+  if (flow.isAssigned) return null
 
-  const isAssigned = payment.status === 'ASSIGNED'
-
-  const invoiceStep: StepState = isAssigned
+  const invoiceStep: StepState = !isEditable
     ? { status: 'done', content: <AssignedNotice ref={assignedNoticeRef} /> }
     : {
         status: invoice ? 'done' : 'current',
@@ -55,21 +49,13 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
           <InvoiceSelection
             payment={payment}
             invoice={invoice}
-            search={search}
-            onSelect={(next) => {
-              setInvoiceChoice({ invoice: next, search: EMPTY_SEARCH })
-            }}
+            search={flow.invoiceSearch}
+            errorRequest={flow.errorRequest}
+            onSelect={flow.selectInvoice}
           />
         ),
         action: invoice ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={() => {
-              setInvoiceChoice({ invoice: null, search: { text: '', autoFocus: true } })
-            }}
-            data-testid="change-invoice"
-          >
+          <Button variant="secondary" size="sm" onPress={flow.changeInvoice} data-testid="change-invoice">
             <FormattedMessage id="steps.invoice.change" />
           </Button>
         ) : undefined,
@@ -90,18 +76,13 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
     : { status: 'locked' }
 
   return (
-    <Page title={<FormattedMessage id={isEditable ? 'assign.title' : 'assign.assignedTitle'} />}>
+    <Page ref={pageRef} title={<FormattedMessage id={isEditable ? 'assign.title' : 'assign.assignedTitle'} />}>
       <AssignmentSteps
         payment={{
           status: 'done',
           content: <PaymentSummary payment={payment} />,
           action: (
-            <Button
-              variant="secondary"
-              size="sm"
-              onPress={() => void navigate(PATHS.selectPayment, { state: CHANGE_PAYMENT })}
-              data-testid="change-payment"
-            >
+            <Button variant="secondary" size="sm" onPress={onChangePayment} data-testid="change-payment">
               <FormattedMessage id={isEditable ? 'steps.payment.change' : 'steps.payment.chooseOther'} />
             </Button>
           ),
@@ -116,13 +97,11 @@ export function PaymentAssignment({ payment }: { payment: Payment }) {
           payment={payment}
           invoice={invoice}
           split={split.evaluation}
-          assign={assign}
-          isConfirming={isConfirming}
-          onConfirmingChange={setIsConfirming}
-          onInvoiceRejected={() => {
-            // Keeps the number visible, so the user knows which invoice was rejected.
-            setInvoiceChoice({ invoice: null, search: { text: invoice?.invoiceNumber ?? '', autoFocus: false } })
-          }}
+          submission={flow.submission}
+          isConfirming={flow.isConfirming}
+          onConfirmingChange={flow.setIsConfirming}
+          onIncomplete={flow.showErrors}
+          onInvoiceRejected={flow.rejectInvoice}
         />
       ) : null}
     </Page>

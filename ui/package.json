@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
+    "build:demo": "vite build --mode demo --outDir dist-demo",
+    "demo": "pnpm build:demo && vite preview --outDir dist-demo",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
@@ -20,7 +22,6 @@
     "@heroui/react": "^3.2.6",
     "@heroui/styles": "^3.2.6",
     "@tanstack/react-query": "^5.104.3",
-    "@tanstack/react-query-devtools": "^5.104.3",
     "lucide-react": "^1.73.0",
     "react": "^19.3.1",
     "react-aria-components": "^1.22.1",
@@ -33,6 +34,8 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/eslint-plugin-query": "^5.104.3",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
@@ -43,6 +46,7 @@
     "eslint-plugin-react-refresh": "^0.5.7",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.13.0",
+    "jsdom": "^31.0.1",
     "msw": "^3.0.3",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
@@ -51,11 +55,14 @@
     "vite": "^8.3.0",
     "vitest": "^4.1.12"
   },
+  "engines": {
+    "node": ">=22.22"
+  },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "^12.11.2",
-      "onFail": "error"
+      "version": ">=10",
+      "onFail": "warn"
     }
   }
 }

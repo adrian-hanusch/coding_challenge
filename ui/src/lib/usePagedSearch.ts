@@ -28,3 +28,5 @@ export function usePagedSearch<T>(query: string, optionsFor: (query: string) => 
     retry: () => void search.refetch(),
   }
 }
+
+export type PagedSearch = Omit<ReturnType<typeof usePagedSearch>, 'items'>

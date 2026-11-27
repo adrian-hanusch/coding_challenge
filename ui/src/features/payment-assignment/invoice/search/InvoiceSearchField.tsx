@@ -1,11 +1,11 @@
-import { ComboBox, Description, FieldError, Header, Input, Label, ListBox } from '@heroui/react'
-import { useRef, useState } from 'react'
+import { Header, ListBox } from '@heroui/react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { FormattedMessage, useIntl } from 'react-intl'
 
-import { type Invoice, MAX_SEARCH_LENGTH } from '../../../../api/types.ts'
-import { SearchResults } from '../../../../components/search/SearchResults.tsx'
-import { SearchTrigger } from '../../../../components/search/SearchTrigger.tsx'
-import type { InvoiceInputError } from './invoiceInput.ts'
+import type { Invoice } from '../../../../api/types.ts'
+import { SearchField } from '../../../../components/search/SearchField.tsx'
+import { type InvoiceInputError, MISSING, SEARCH_FAILED } from './invoiceInput.ts'
 import { InvoiceInputErrorMessage } from './InvoiceInputErrorMessage.tsx'
 import { InvoiceOption } from './InvoiceOption.tsx'
 import { useInvoiceNumberLookup } from './useInvoiceNumberLookup.ts'
@@ -20,19 +20,28 @@ interface InvoiceSearchFieldProps {
   customerId: string | null
   senderName: string
   start: InvoiceSearchStart
-  /** `wasFocused` is false when the user had already moved on, i.e. for a lookup on blur. */
-  onSelect: (invoice: Invoice, wasFocused: boolean) => void
+  /** Shows that an invoice is missing whenever it increases. */
+  errorRequest: number
+  onSelect: (invoice: Invoice) => void
 }
 
-/** Invoice autocomplete with server-side search. A typed number is resolved on blur or Enter. */
-export function InvoiceSearchField({ customerId, senderName, start, onSelect }: InvoiceSearchFieldProps) {
+/** Invoice autocomplete with server-side search. A typed number is resolved with Enter. */
+export function InvoiceSearchField({ customerId, senderName, start, errorRequest, onSelect }: InvoiceSearchFieldProps) {
   const intl = useIntl()
   const inputRef = useRef<HTMLInputElement>(null)
   const [text, setText] = useState(start.text)
   const [inputError, setInputError] = useState<InvoiceInputError | null>(null)
-
   const query = text.trim()
-  const search = useInvoiceSearch({ query, customerId })
+
+  // Starts at the current request, so reopening the search after "Change invoice" shows no error.
+  const [shownRequest, setShownRequest] = useState(errorRequest)
+  if (errorRequest !== shownRequest) {
+    setShownRequest(errorRequest)
+    // Set during render, so the page finds the invalid field when it moves focus to the first error.
+    if (query === '') setInputError(MISSING)
+  }
+
+  const { invoices, exactMatches, fromSender, others, ...search } = useInvoiceSearch({ query, customerId })
   const { track, lookup } = useInvoiceNumberLookup(customerId, start.text)
 
   function changeText(next: string) {
@@ -41,99 +50,100 @@ export function InvoiceSearchField({ customerId, senderName, start, onSelect }: 
     setInputError(null)
   }
 
-  async function resolveTypedInput() {
+  async function resolveTypedInput({ focusOnError }: { focusOnError: boolean }) {
     if (query === '') return
     const resolution = await lookup(query)
     if (!resolution) return
-    if ('invoice' in resolution) onSelect(resolution.invoice, document.activeElement === inputRef.current)
-    else setInputError(resolution.error)
+    if ('invoice' in resolution) {
+      onSelect(resolution.invoice)
+      return
+    }
+    if (!focusOnError) {
+      setInputError(resolution.error)
+      return
+    }
+    // Rendered first, so the invalid field no longer opens its list on focus.
+    flushSync(() => {
+      setInputError(resolution.error)
+    })
+    inputRef.current?.focus()
   }
 
-  const error = inputError ?? (search.isError ? ({ code: 'searchFailed' } as const) : null)
+  // A typed number that was not confirmed with Enter is resolved instead of being reported as missing.
+  const resolveOnRequest = useEffectEvent(() => {
+    if (query !== '' && !inputError) void resolveTypedInput({ focusOnError: true })
+  })
+  const handledRequest = useRef(errorRequest)
+  useEffect(() => {
+    if (errorRequest === handledRequest.current) return
+    handledRequest.current = errorRequest
+    resolveOnRequest()
+  }, [errorRequest])
 
   return (
-    <ComboBox<Invoice>
-      fullWidth
-      menuTrigger="focus"
+    <SearchField<Invoice>
+      label={<FormattedMessage id="invoiceSearch.label" />}
+      placeholder={intl.formatMessage({ id: 'invoiceSearch.placeholder' })}
+      loadingLabel={intl.formatMessage({ id: 'invoiceSearch.loading' })}
+      description={
+        <FormattedMessage
+          id={customerId ? 'invoiceSearch.descriptionWithSender' : 'invoiceSearch.description'}
+          values={{ sender: senderName }}
+        />
+      }
+      inputError={inputError ? <InvoiceInputErrorMessage error={inputError} /> : null}
+      searchErrorMessage={<InvoiceInputErrorMessage error={SEARCH_FAILED} />}
+      emptyMessage={<FormattedMessage id="invoiceSearch.empty" />}
       allowsCustomValue
-      allowsEmptyCollection
-      isInvalid={error !== null}
-      items={search.invoices}
-      disabledKeys={search.disabledKeys}
+      items={invoices}
       inputValue={text}
       onInputChange={changeText}
       onChange={(key) => {
-        const next = search.invoices.find((item) => item.id === key)
-        if (next) onSelect(next, true)
+        const next = invoices.find((item) => item.id === key)
+        if (next) onSelect(next)
+      }}
+      search={search}
+      input={{
+        ref: inputRef,
+        autoFocus: start.autoFocus,
+        onKeyDown: (event) => {
+          if (event.key === 'Enter') void resolveTypedInput({ focusOnError: false })
+        },
       }}
       data-testid="invoice-search"
     >
-      <Label>
-        <FormattedMessage id="invoiceSearch.label" />
-      </Label>
-      <ComboBox.InputGroup>
-        <Input
-          ref={inputRef}
-          autoFocus={start.autoFocus}
-          maxLength={MAX_SEARCH_LENGTH}
-          placeholder={intl.formatMessage({ id: 'invoiceSearch.placeholder' })}
-          onBlur={() => void resolveTypedInput()}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void resolveTypedInput()
-          }}
-          data-testid="invoice-search-input"
-        />
-        <SearchTrigger
-          isSearching={search.isSearching}
-          loadingLabel={intl.formatMessage({ id: 'invoiceSearch.loading' })}
-        />
-      </ComboBox.InputGroup>
-      {error ? (
-        <FieldError data-testid="invoice-search-error">
-          <InvoiceInputErrorMessage error={error} />
-        </FieldError>
-      ) : (
-        <Description>
-          <FormattedMessage
-            id={customerId ? 'invoiceSearch.descriptionWithSender' : 'invoiceSearch.description'}
-            values={{ sender: senderName }}
-          />
-        </Description>
-      )}
-      <SearchResults
-        isLoadingMore={search.isLoadingMore}
-        onLoadMore={search.loadMore}
-        emptyMessage={<EmptyMessage isSearching={search.isSearching} isError={search.isError} />}
-      >
-        {search.fromSender.length > 0 ? (
-          <ListBox.Section id="sender">
+      {exactMatches.length > 0 ? (
+        <ListBox.Section id="exact">
+          <Header>
+            <FormattedMessage id="invoiceSearch.section.exact" />
+          </Header>
+          {exactMatches.map((item) => (
+            <InvoiceOption key={item.id} invoice={item} />
+          ))}
+        </ListBox.Section>
+      ) : null}
+      {fromSender.length > 0 ? (
+        <ListBox.Section id="sender">
+          <Header>
+            <FormattedMessage id="invoiceSearch.section.sender" values={{ sender: senderName }} />
+          </Header>
+          {fromSender.map((item) => (
+            <InvoiceOption key={item.id} invoice={item} />
+          ))}
+        </ListBox.Section>
+      ) : null}
+      {others.length > 0 ? (
+        <ListBox.Section id="others">
+          {exactMatches.length > 0 || fromSender.length > 0 ? (
             <Header>
-              <FormattedMessage id="invoiceSearch.section.sender" values={{ sender: senderName }} />
+              <FormattedMessage id="invoiceSearch.section.others" />
             </Header>
-            {search.fromSender.map((item) => (
-              <InvoiceOption key={item.id} invoice={item} />
-            ))}
-          </ListBox.Section>
-        ) : null}
-        {search.others.length > 0 ? (
-          <ListBox.Section id="others">
-            {search.fromSender.length > 0 ? (
-              <Header>
-                <FormattedMessage id="invoiceSearch.section.others" />
-              </Header>
-            ) : null}
-            {search.others.map((item) => (
-              <InvoiceOption key={item.id} invoice={item} />
-            ))}
-          </ListBox.Section>
-        ) : null}
-      </SearchResults>
-    </ComboBox>
+          ) : null}
+          {others.map((item) => (
+            <InvoiceOption key={item.id} invoice={item} />
+          ))}
+        </ListBox.Section>
+      ) : null}
+    </SearchField>
   )
-}
-
-function EmptyMessage({ isSearching, isError }: { isSearching: boolean; isError: boolean }) {
-  if (isSearching) return <FormattedMessage id="invoiceSearch.loading" />
-  if (isError) return <InvoiceInputErrorMessage error={{ code: 'searchFailed' }} />
-  return <FormattedMessage id="invoiceSearch.empty" />
 }
