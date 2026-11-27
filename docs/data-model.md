@@ -70,7 +70,7 @@ erDiagram
 |---|---|---|
 | `Money` | `{ amountMinor, currency }` | Integer cents, e.g. `124900` = €1,249.00 (A8) |
 | `PaymentStatus` | `UNMATCHED`, `ASSIGNED` | The page edits only `UNMATCHED` payments |
-| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` invoices are offered by the search (A3). The backend decides any status change after assignment (A4). |
+| `InvoiceStatus` | `OPEN`, `PAID` | Only `OPEN` invoices are offered by the search (A3). An assignment sets the invoice to `PAID`, also when the amounts differ (A3, A4). |
 | `SplitType` | `PLATFORM_FEE`, `PROVIDER_FEE`, `LOGISTICS_FEE`, `MERCHANT_PAYOUT` | Each type exactly once per assignment |
 
 ## TypeScript types

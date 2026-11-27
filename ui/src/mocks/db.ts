@@ -43,7 +43,7 @@ export const db = {
   },
 
   /**
-   * Stores the assignment, marks the payment as assigned and the invoice as paid (the backend decides).
+   * Stores the assignment, marks the payment as assigned and the invoice as paid, also for a different amount (A4).
    * A paid invoice is no longer OPEN, which keeps it from being assigned twice.
    */
   assign(paymentId: string, invoiceId: string, splits: PaymentSplit[]): PaymentAssignment {
