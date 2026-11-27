@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { evaluateSplit, INITIAL_SPLIT_DRAFT, type SplitDraft, withFee, withMerchantPayout } from './split.ts'
+import {
+  evaluateSplit,
+  INITIAL_SPLIT_DRAFT,
+  type SplitDraft,
+  toPaymentSplits,
+  withFee,
+  withMerchantPayout,
+} from './split.ts'
 
 const PAYMENT = 124900
 const TOO_PRECISE = { tooPrecise: 0.001 }
@@ -123,5 +130,18 @@ describe('withFee', () => {
 describe('INITIAL_SPLIT_DRAFT', () => {
   it('cannot be confirmed before the fees are entered', () => {
     expect(evaluateSplit(PAYMENT, INITIAL_SPLIT_DRAFT).validSplit).toBeNull()
+  })
+})
+
+describe('toPaymentSplits', () => {
+  it('builds one split per type', () => {
+    const splits = toPaymentSplits({ ...COMPLETE_FEES, MERCHANT_PAYOUT: 115291 }, 'EUR')
+
+    expect(splits).toEqual([
+      { type: 'PLATFORM_FEE', amount: { amountMinor: 6245, currency: 'EUR' } },
+      { type: 'PROVIDER_FEE', amount: { amountMinor: 1874, currency: 'EUR' } },
+      { type: 'LOGISTICS_FEE', amount: { amountMinor: 1490, currency: 'EUR' } },
+      { type: 'MERCHANT_PAYOUT', amount: { amountMinor: 115291, currency: 'EUR' } },
+    ])
   })
 })
