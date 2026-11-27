@@ -1,4 +1,3 @@
-import { Button } from '@heroui/react'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
@@ -25,12 +24,6 @@ export function PaymentSearchField({ autoFocus, onSelect }: PaymentSearchFieldPr
       loadingLabel={intl.formatMessage({ id: 'paymentSearch.loading' })}
       description={<FormattedMessage id="paymentSearch.description" />}
       searchErrorMessage={<FormattedMessage id="paymentSearch.error" />}
-      searchErrorAction={
-        // Without the null slot it would become a second trigger button of the ComboBox.
-        <Button slot={null} variant="secondary" size="sm" onPress={search.retry} data-testid="payment-search-retry">
-          <FormattedMessage id="paymentSearch.retry" />
-        </Button>
-      }
       emptyMessage={<FormattedMessage id="paymentSearch.empty" />}
       items={payments}
       inputValue={text}

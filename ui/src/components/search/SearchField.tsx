@@ -1,5 +1,6 @@
-import { ComboBox, Description, FieldError, Input, Label } from '@heroui/react'
+import { Button, ComboBox, Description, FieldError, Input, Label } from '@heroui/react'
 import type { ComponentProps, ReactNode } from 'react'
+import { FormattedMessage } from 'react-intl'
 
 import { MAX_SEARCH_LENGTH } from '../../api/types.ts'
 import type { PagedSearch } from '../../lib/usePagedSearch.ts'
@@ -20,10 +21,8 @@ interface SearchFieldProps<T extends object> extends Pick<
   description: ReactNode
   /** Error of the typed input, shown instead of the description; takes precedence over a failed search. */
   inputError?: ReactNode
-  /** Below the field and as empty-list text when the search failed. */
+  /** Below the field, next to a retry button, and as empty-list text when the search failed. */
   searchErrorMessage: ReactNode
-  /** Next to the search error, e.g. a retry button. */
-  searchErrorAction?: ReactNode
   emptyMessage: ReactNode
   search: PagedSearch
   input?: Pick<InputProps, 'ref' | 'autoFocus' | 'onKeyDown'>
@@ -40,7 +39,6 @@ export function SearchField<T extends object>({
   description,
   inputError,
   searchErrorMessage,
-  searchErrorAction,
   emptyMessage,
   search,
   input,
@@ -72,7 +70,12 @@ export function SearchField<T extends object>({
       {hasError ? (
         <FieldError className="flex flex-wrap items-center gap-x-2" data-testid={`${testId}-error`}>
           {error}
-          {inputError == null ? searchErrorAction : null}
+          {inputError == null ? (
+            // Without the null slot it would become a second trigger button of the ComboBox.
+            <Button slot={null} variant="secondary" size="sm" onPress={search.retry} data-testid={`${testId}-retry`}>
+              <FormattedMessage id="search.retry" />
+            </Button>
+          ) : null}
         </FieldError>
       ) : (
         <Description>{description}</Description>

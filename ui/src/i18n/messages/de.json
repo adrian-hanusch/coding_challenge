@@ -98,5 +98,5 @@
   "paymentSearch.loading": "Zahlungen werden geladen …",
   "paymentSearch.empty": "Keine offene Zahlung gefunden.",
   "paymentSearch.error": "Die Zahlungen konnten nicht geladen werden.",
-  "paymentSearch.retry": "Erneut versuchen"
+  "search.retry": "Erneut versuchen"
 }

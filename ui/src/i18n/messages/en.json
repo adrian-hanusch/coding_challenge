@@ -98,5 +98,5 @@
   "paymentSearch.loading": "Loading payments …",
   "paymentSearch.empty": "No open payment found.",
   "paymentSearch.error": "The payments could not be loaded.",
-  "paymentSearch.retry": "Try again"
+  "search.retry": "Try again"
 }
