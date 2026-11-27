@@ -39,14 +39,11 @@ Related assumptions, decisions and open questions are in [assumptions.md](assump
   need the same libraries, and splitting them would add a request without saving any.
 
 ### pnpm
-- Fast, with strict dependency resolution: undeclared packages cannot be imported.
-- `devEngines.packageManager` in `package.json` asks for pnpm 10 or newer and only warns otherwise. `engines` asks for
-  Node.js 22.22 or newer, the lowest version all dependencies support. The lockfile installs unchanged with pnpm 10.
-- `pnpm-lock.yaml` pins the exact versions. `pnpm install --frozen-lockfile` enforces them, so every reviewer gets the
-  same dependencies.
-- The usual `packageManager` field is **not** used: with it, pnpm downloads and switches to that exact version on its
-  own, through the global registry configuration, which not every network allows. Any pnpm from 10 on works, installed
-  globally or run through `npx` (see `ui/README.md`).
+- Fast, with strict dependency resolution: undeclared packages cannot be imported. `pnpm-lock.yaml` pins the exact
+  versions, and it installs unchanged with pnpm 10.
+- `devEngines` asks for pnpm 10+ and only warns, `engines` for Node.js 22.22+, the lowest version all dependencies
+  support. There is no `packageManager` field: with it, pnpm would download that exact version through the registry
+  on its own, which not every network allows.
 - `pnpm-workspace.yaml` allows msw 3 for `@vitest/mocker`, which still names msw 2 as its peer. It only uses msw for
   Vitest's browser mode, which this project does not use.
 
@@ -167,17 +164,13 @@ original plan.
 - Latency and failures can be controlled through URL parameters (see `ui/README.md`, "Scenarios").
 - The Vite plugin `msw/vite` serves the service worker in the dev server. It runs in `worker-only` mode, so the stable
   `setupWorker` API is used instead of the experimental `virtual:msw`. There is therefore no generated
-  `public/mockServiceWorker.js`, and the production build contains neither worker nor handlers.
+  `public/mockServiceWorker.js`. `pnpm build` contains neither worker nor handlers; only `--mode demo` copies the worker
+  into the build.
 
 ### Vitest
 - Vitest uses the Vite configuration, so no separate build setup is needed. Its API is compatible with Jest.
-- Unit tests cover the split calculation, the cent conversion, the mapping of server errors, pagination and the mock
-  API's search parameters, payment search and invoice search (against the MSW handlers via `setupServer`).
-- A component test renders the assignment against the MSW handlers in jsdom (React Testing Library, user-event). It
-  checks what a confirm attempt with input missing shows and focuses, a successful assignment including the request
-  body in cents, an overridden payout, the acknowledgement of an amount mismatch and server errors. Only that file opts
-  into jsdom; the unit tests stay in Node.
-- Choosing the payment has no component test, and there are no end-to-end tests yet.
+- Unit tests run in Node. The component test opts into jsdom per file and runs against the MSW handlers via
+  `setupServer` (React Testing Library, user-event). What is covered: README, "Known limitations".
 
 ### ESLint + Prettier
 - `typescript-eslint` with the strictest type-aware rule sets (`strictTypeChecked` + `stylisticTypeChecked`).

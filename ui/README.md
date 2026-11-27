@@ -80,62 +80,23 @@ In the browser console, `__mockDb.reset()` restores the test data without a relo
 
 ```
 src/
-  main.tsx              Entry point
-  index.css             Tailwind v4, HeroUI, font, adjustments to HeroUI components (no tailwind.config.js)
-  themes/petrol.css     Theme: colors, radii, shadows (overrides HeroUI variables)
-  app/AppProviders.tsx  QueryClient, locale, toasts
-  app/router.tsx        Routes (react-router, data mode)
-  app/paths.ts          Paths and the typed navigation state of the payment selection
-  app/RouteError.tsx    Error page of the routes
-  app/StatusPage.tsx    Layout of fallback pages (not found, errors) with a way back to the payments
-  app/queryClient.ts    Default options for TanStack Query (retry only on server and network errors)
-  app/shell/            Header with logo, title and language choice (LocaleMenu) above the page
-  pages/                One file per route; the only place that navigates
-    SelectPaymentPage   /payments, step 1: choose a payment
-    AssignPaymentPage   /payments/:paymentId/assign, loads the payment (error, skeleton)
-  features/payment-assignment/  Assignment, one subfolder per step
-    PaymentSelection    Process without a chosen payment: only step 1 is open
-    PaymentAssignment   Renders the steps for each state of the process
-    useAssignmentFlow   Chosen invoice, split draft, open dialog and submission
-    PaymentAssignmentSkeleton  Steps while the payment loads
-    steps/              AssignmentSteps: order, titles and lock hints of the steps
-    payment/            Step 1: PaymentSummary, payment data (display only, A11)
-      search/           Search over unmatched payments
-    invoice/            Step 2: choose and change the invoice, InvoiceSummary, amount mismatch (A4)
-      AssignedNotice    Replaces the selection when the payment is already assigned
-      MismatchAcknowledgement  Note on the difference and checkbox to confirm it in the dialog
-      search/           Invoice selection with server-side search and pagination
-        useInvoiceNumberLookup  Resolves a typed number with Enter or the confirm button
-        invoiceInput.ts         Error cases of a typed number (missing, not found)
-    fee-splitter/       Fee splitter: fees and payout (calculated, can be overridden, A1)
-      useSplitDraft     Split draft, evaluation, touched fields
-      SplitErrorAlert   Split errors (fees too high, sum does not match)
-    confirmation/       Summary section as confirmation dialog (A2)
-      ConfirmAssignment        Button below the steps: opens the dialog, or shows what is missing
-      ConfirmAssignmentDialog  Modal: summary of everything that is stored; confirm the difference (A4)
-      SplitBreakdown           Payment, fees, payout in the dialog
-      useAssignPayment         Sends the assignment, success toast, keeps payments and invoices current in the cache
-      assignmentFailure        Server error codes as failures the user can act on
-      AssignmentErrorAlert     Server error on submit, one text per failure
-  domain/assignment.ts  Splits for the API
-  domain/invoice.ts     Difference between payment and invoice amount
-  domain/money.ts       Entered amounts in cents, upper limit, conversion from and to euros
-  domain/split.ts       Split in cents: draft, calculation, validation (pure functions)
-  lib/stripCurrency.ts  Removes currency symbol and code from pasted amounts
-  lib/useFormatMoney.ts Formats amounts in the active locale
-  lib/useFormatDate.ts  Formats due dates (plain date, UTC) and timestamps in the active locale
-  lib/usePagedSearch.ts Debounced search with pagination for payments and invoices
-  lib/useFocusWhen.ts   Moves focus when a trigger changes, e.g. after the focused element unmounted
-  i18n/                 react-intl + React Aria with one shared locale source
-    localeStore.ts      Zustand: chosen language (stored)
-    messages/*.json     Messages, flat dotted keys, ICU placeholders
-  components/           Shared: Page, steps/, search/ (SearchField: autocomplete over a server-side,
-                        paged search), SelectionSummary (chosen payment or invoice, also in the dialog), Notice,
-                        MoneyField (cents), Typography (HeroUI Typography with a separate HTML element)
-  api/                  Types of the API contract, fetch client, query options
-  mocks/                MSW: handlers, test data, in-memory DB, scenarios
-    browser.ts          Start in the browser (dev only)
-    node.ts             setupServer for Vitest
+  main.tsx         Entry point; starts the mock API first when it is enabled
+  index.css        Tailwind v4, HeroUI, font, adjustments to HeroUI components (no tailwind.config.js)
+  themes/          Theme: colors, radii, shadows (overrides HeroUI variables)
+  app/             Providers, routes, paths, error and fallback pages, TanStack Query defaults, header (shell/)
+  pages/           One file per route; the only place that navigates
+  features/payment-assignment/
+    PaymentAssignment, useAssignmentFlow   The steps for each state of the process, and their state
+    payment/       Step 1: payment summary and search
+    invoice/       Step 2: invoice search and selection, amount mismatch (A4)
+    fee-splitter/  Step 3: fees and payout (calculated, can be overridden, A1)
+    confirmation/  Confirmation dialog, the request and its error handling (A2)
+  domain/          Pure functions: money in cents, split calculation and validation
+  lib/             Hooks and helpers: formatting, paged search, focus, pasted amounts
+  components/      Shared UI: Page, steps, search field, money field, notices
+  i18n/            react-intl + React Aria with one locale source (Zustand), messages/*.json
+  api/             Types of the API contract, fetch client, query options
+  mocks/           MSW: handlers, test data, in-memory DB, scenarios; browser.ts and node.ts start it
 ```
 
 New messages go into `en.json` and `de.json`. A key missing in `de.json` fails the typecheck.

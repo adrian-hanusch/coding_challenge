@@ -129,33 +129,16 @@ type AmountInput = number | null | { tooPrecise: number };
 
 interface SplitDraft {
   fees: Record<'PLATFORM_FEE' | 'PROVIDER_FEE' | 'LOGISTICS_FEE', AmountInput>; // start empty
-  merchantOverride: AmountInput; // null = use the calculated payout (A1)
+  merchantOverride: AmountInput; // null = use the calculated payout (A1); an override equal to it is stored as null
 }
 
-// useAssignmentFlow state: the invoice, the open modal, plus useSplitDraft(payment.amount) for the split
-invoice: Invoice | null; // cleared when the server rejects it (INVOICE_NOT_OPEN, INVOICE_NOT_FOUND) and the modal closes
-isConfirming: boolean; // keeps the form mounted while the modal is open, even if a refetch finds the payment ASSIGNED
-draft: SplitDraft;
-touchedFees: Set<FeeType>; // fees whose "missing" error is shown, i.e. the user has left the field
-
-// derived on each render inside useSplitDraft, never stored
+// derived on each render, never stored
 const evaluation = evaluateSplit(payment.amount.amountMinor, draft);
 // → { calculatedPayout, displayedPayout, isOverridden, fieldErrors, error, validSplit }
-// validSplit: all four amounts once there is no error left, else null (what the modal confirms)
-
-// local to the confirmation modal, reset on every opening
-isAcknowledged: boolean; // difference to the invoice amount checked (A4)
 ```
 
-The *Review and confirm* button below the steps is always enabled. It opens the modal once an invoice is selected and
-`validSplit` is set. Otherwise it shows every error at its field (the invoice search, all fees) and moves focus to the
-first problem on the page, or to the split error if no single field is wrong. The modal is the summary: it shows `validSplit` and sends it as the four `PaymentSplit`s, so the server receives
-exactly the amounts shown in it.
-
-An override equal to the calculated payout is stored as `null` (`withMerchantPayout`), so it does not stay as a stale
-manual value.
-
-Server data (the payment and invoice search results) is server state, for example via TanStack Query. The draft is local form state.
+`validSplit` holds all four amounts once there is no error left. The confirmation modal shows it and sends it as the
+four `PaymentSplit`s, so the server receives exactly the amounts shown. Server data stays in TanStack Query.
 
 ## Split calculation
 
@@ -253,8 +236,5 @@ RFC 9457 problem details (`application/problem+json`): `{ status, code, title, e
 
 ### Why integer cents
 
-Floating point is inexact: `1249 - 62.45 - 18.74 - 14.90` gives `1152.9099999999999` in JavaScript.
-
-- Sums compare exactly, with no epsilon needed.
-- Parse locale input strings directly to cents. Do not use `parseFloat(x) * 100`.
-- Format only for display, with react-intl (D1).
+Floating point is inexact: `1249 - 62.45 - 18.74 - 14.90` gives `1152.9099999999999` in JavaScript. In cents, sums
+compare exactly. Euros appear only at the field (converted once, see `toAmountInput`) and in display (D1).

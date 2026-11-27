@@ -59,18 +59,6 @@ Left out on purpose: a navigation (there is only one page), user accounts, an au
 With a 4-hour time box, the additions would go in this order: paged search, mock scenarios beyond one error case, the
 second language, the payment search (replaced by a link per test payment).
 
-## Commands
-
-All commands run in `ui/`:
-
-| Command                                              | Purpose                        |
-| ---------------------------------------------------- | ------------------------------ |
-| `pnpm dev`                                           | Dev server with the mock API   |
-| `pnpm build`                                         | Typecheck and production build |
-| `pnpm demo`                                          | Production build with the mock |
-| `pnpm test`                                          | Unit and component tests       |
-| `pnpm lint` / `pnpm typecheck` / `pnpm format:check` | Static checks                  |
-
 ## Documentation
 
 | Document                                   | Content                                                                                    |
@@ -78,7 +66,7 @@ All commands run in `ui/`:
 | [docs/assumptions.md](docs/assumptions.md) | What the task requires, what was assumed where it is open or contradictory, open questions |
 | [docs/data-model.md](docs/data-model.md)   | Types, money handling in cents, the proposed REST API and its error codes                  |
 | [docs/libraries.md](docs/libraries.md)     | Stack, reasons for each library, architecture trade-offs, what was left out                |
-| [ui/README.md](ui/README.md)               | Setup details, mock API, test data and scenarios, source structure                         |
+| [ui/README.md](ui/README.md)               | Setup, all commands, mock API, test data and scenarios, source structure                   |
 
 ## Key decisions
 
