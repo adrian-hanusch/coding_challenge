@@ -40,27 +40,26 @@ export function PaymentAssignment({ payment, onChangePayment, onAssigned }: Paym
 
   if (flow.isAssigned) return null
 
-  const invoiceStep: StepState =
-    payment.status === 'ASSIGNED'
-      ? { status: 'done', content: <AssignedNotice ref={assignedNoticeRef} /> }
-      : {
-          status: invoice ? 'done' : 'current',
-          description: invoice ? undefined : <FormattedMessage id="paymentDetails.invoice.description" />,
-          content: (
-            <InvoiceSelection
-              payment={payment}
-              invoice={invoice}
-              search={flow.invoiceSearch}
-              errorRequest={flow.errorRequest}
-              onSelect={flow.selectInvoice}
-            />
-          ),
-          action: invoice ? (
-            <Button variant="secondary" size="sm" onPress={flow.changeInvoice} data-testid="change-invoice">
-              <FormattedMessage id="steps.invoice.change" />
-            </Button>
-          ) : undefined,
-        }
+  const invoiceStep: StepState = !isEditable
+    ? { status: 'done', content: <AssignedNotice ref={assignedNoticeRef} /> }
+    : {
+        status: invoice ? 'done' : 'current',
+        description: invoice ? undefined : <FormattedMessage id="paymentDetails.invoice.description" />,
+        content: (
+          <InvoiceSelection
+            payment={payment}
+            invoice={invoice}
+            search={flow.invoiceSearch}
+            errorRequest={flow.errorRequest}
+            onSelect={flow.selectInvoice}
+          />
+        ),
+        action: invoice ? (
+          <Button variant="secondary" size="sm" onPress={flow.changeInvoice} data-testid="change-invoice">
+            <FormattedMessage id="steps.invoice.change" />
+          </Button>
+        ) : undefined,
+      }
   const splitStep: StepState = invoice
     ? {
         status: split.evaluation.validSplit ? 'done' : 'current',
