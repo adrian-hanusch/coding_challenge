@@ -2,14 +2,7 @@ import { delay, type HttpResponseResolver, type PathParams } from 'msw'
 
 import { problem } from './problem.ts'
 
-/**
- * Mock switches, set via URL and kept in sessionStorage for the tab:
- *
- *   ?mock-delay=2000                       fixed latency in ms (default: realistic 100–400 ms)
- *   ?mock-fail=assignment:409,search:500   failing endpoints; `?mock-fail=` clears them
- *                                          (`assignment:409-invoice` simulates INVOICE_NOT_OPEN)
- *   ?mock-reset                            clears all switches
- */
+// Mock switches, set via URL and kept in sessionStorage for the tab. Usage: ui/README.md, "Scenarios".
 
 // The HTTP status, with a suffix where one status has several causes.
 const FAILURES = {

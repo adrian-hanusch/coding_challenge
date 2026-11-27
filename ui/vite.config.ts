@@ -18,7 +18,6 @@ const emitMockWorker: Plugin = {
   },
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   // The empty prefix loads all variables, so API_URL from .env*.local works too, not only VITE_*.
   const env = loadEnv(mode, import.meta.dirname, '')
@@ -29,7 +28,6 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      // Serves mockServiceWorker.js in dev only, so neither a generated file in public/ nor a worker in dist/.
       // `worker-only` keeps the stable setupWorker API instead of the experimental `virtual:msw` network.
       { ...msw({ mode: 'worker-only' }), apply: 'serve' },
       command === 'build' && mocking && emitMockWorker,
