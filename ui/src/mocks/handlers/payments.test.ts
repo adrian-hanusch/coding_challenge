@@ -1,19 +1,10 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Page, Payment } from '../../api/types.ts'
 import { db } from '../db.ts'
-import { server } from '../node.ts'
+import { setupNodeMockServer } from '../node.ts'
 
-beforeAll(() => {
-  // MSW resolves the relative handler paths against the location, which Node does not have.
-  vi.stubGlobal('location', new URL('http://localhost/'))
-  server.listen()
-})
-
-afterAll(() => {
-  server.close()
-  vi.unstubAllGlobals()
-})
+setupNodeMockServer()
 
 const search = (query: string) => fetch(`http://localhost/api/payments?${query}`)
 
