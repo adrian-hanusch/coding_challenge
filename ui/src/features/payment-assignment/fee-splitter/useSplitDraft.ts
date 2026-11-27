@@ -20,7 +20,7 @@ export function useSplitDraft(paymentAmount: Money) {
   return {
     draft,
     evaluation: evaluateSplit(paymentAmount.amountMinor, draft),
-    /** Fees whose "missing" error is shown, i.e. the user has left the field. */
+    /** The user has left these fields. */
     touchedFees,
     setFee: (type: FeeType, value: AmountInput) => {
       setDraft((current) => withFee(current, type, value))

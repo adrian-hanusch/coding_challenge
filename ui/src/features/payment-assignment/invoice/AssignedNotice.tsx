@@ -3,7 +3,6 @@ import { FormattedMessage } from 'react-intl'
 
 import { Notice } from '../../../components/Notice.tsx'
 
-/** `ref` points at the notice itself, so it can receive focus. */
 export function AssignedNotice({ ref }: { ref?: Ref<HTMLDivElement> }) {
   return (
     <Notice

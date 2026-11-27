@@ -1,5 +1,3 @@
-// API contract shared by the client and the mock handlers.
-
 /** Integer cents, e.g. `124900` = €1,249.00. */
 export interface Money {
   amountMinor: number
