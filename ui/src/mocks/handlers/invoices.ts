@@ -40,18 +40,12 @@ function searchInvoices(invoices: readonly Invoice[], search: InvoiceSearch): Pa
         invoice.invoiceNumber.toLowerCase().includes(needle) ||
         invoice.merchant.name.toLowerCase().includes(needle),
     )
-    .map((invoice) => ({ invoice, rank: rank(invoice) }))
     .sort(
       (a, b) =>
-        a.rank - b.rank ||
-        a.invoice.dueDate.localeCompare(b.invoice.dueDate) ||
-        a.invoice.invoiceNumber.localeCompare(b.invoice.invoiceNumber),
+        rank(a) - rank(b) || a.dueDate.localeCompare(b.dueDate) || a.invoiceNumber.localeCompare(b.invoiceNumber),
     )
 
-  return pageOf(
-    matches.map(({ invoice }) => invoice),
-    search,
-  )
+  return pageOf(matches, search)
 }
 
 export const invoiceHandlers = [

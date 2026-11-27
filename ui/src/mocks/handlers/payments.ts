@@ -56,18 +56,11 @@ function validateSplits(raw: unknown[]): { splits: PaymentSplit[] } | { errors: 
 /** Same invoice and the same amount per split type, in any order. */
 function isSameAssignment(existing: PaymentAssignment, body: unknown): boolean {
   if (!isRecord(body) || body.invoiceId !== existing.invoiceId || !Array.isArray(body.splits)) return false
-  const splits: unknown[] = body.splits
+  const result = validateSplits(body.splits)
   return (
-    splits.length === existing.splits.length &&
+    'splits' in result &&
     existing.splits.every(({ type, amount }) =>
-      splits.some(
-        (split) =>
-          isRecord(split) &&
-          split.type === type &&
-          isRecord(split.amount) &&
-          split.amount.amountMinor === amount.amountMinor &&
-          split.amount.currency === amount.currency,
-      ),
+      result.splits.some((split) => split.type === type && split.amount.amountMinor === amount.amountMinor),
     )
   )
 }
